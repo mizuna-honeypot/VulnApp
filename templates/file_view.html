@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}ファイル表示 - VulnApp{% endblock %}
+
+{% block content %}
+<h2>ファイル表示機能</h2>
+
+<div class="file-viewer">
+    <form method="GET" action="/files">
+        <div class="form-group">
+            <label for="file">ファイル名:</label>
+            <input type="text" id="file" name="file" placeholder="例: public.txt" value="{{ filename }}">
+            <button type="submit" class="btn">表示</button>
+        </div>
+    </form>
+    
+    <div class="file-list">
+        <h4>利用可能なファイル:</h4>
+        <ul>
+            <li><a href="/files?file=public.txt">public.txt</a></li>
+            <li><a href="/files?file=secret.txt">secret.txt</a> (非公開)</li>
+        </ul>
+    </div>
+    
+    {% if error %}
+    <div class="error-box">
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+    
+    {% if content %}
+    <div class="file-content">
+        <h4>ファイル内容: {{ filename }}</h4>
+        <pre>{{ content }}</pre>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 脆弱性のヒント -->
+<div class="hint-box">
+    <h4>💡 テストのヒント</h4>
+    <ul>
+        <li><strong>パストラバーサル:</strong> <code>../../etc/passwd</code> を試してみてください</li>
+        <li><strong>Windowsの場合:</strong> <code>..\..\windows\system32\drivers\etc\hosts</code></li>
+        <li><strong>アプリファイル:</strong> <code>../../app.py</code> でソースコードが読めます</li>
+    </ul>
+</div>
+{% endblock %}

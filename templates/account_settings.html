@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Account Settings - VulnApp</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background-color: #f5f5f5; }
+        .container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="email"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background-color: #0056b3; }
+        .delete-btn { background-color: #dc3545; }
+        .delete-btn:hover { background-color: #c82333; }
+        .message { padding: 10px; margin-bottom: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; }
+        .warning { padding: 15px; margin-top: 20px; background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; border-radius: 4px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { color: #007bff; text-decoration: none; margin-right: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav"><a href="/">← Back to Home</a></div>
+        <h1>Account Settings</h1>
+        {% if message %}<div class="message">{{ message }}</div>{% endif %}
+        <div class="warning">⚠️ <strong>Vulnerability Warning:</strong> This page has no CSRF protection!</div>
+        <form method="POST" action="/account/settings">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ current_email }}" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" value="{{ current_username }}" required>
+            </div>
+            <button type="submit">Update Settings</button>
+        </form>
+        <hr style="margin: 30px 0;">
+        <h3>Danger Zone</h3>
+        <form method="POST" action="/account/delete" onsubmit="return confirm('Are you sure?')">
+            <input type="hidden" name="username" value="{{ current_username }}">
+            <button type="submit" class="delete-btn">Delete Account</button>
+        </form>
+    </div>
+</body>
+</html>

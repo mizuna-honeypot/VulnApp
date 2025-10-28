@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}ホーム - VulnApp{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h2>脆弱性診断用テストアプリケーション</h2>
+    <p>このアプリケーションは、Webアプリケーションスキャナーのテスト用に作成されています。</p>
+</div>
+
+<div class="features">
+    <h3>実装されている脆弱性</h3>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h4>🔍 SQLインジェクション</h4>
+            <p>商品検索機能でSQLインジェクションが可能</p>
+            <a href="/products" class="btn">試してみる</a>
+        </div>
+        
+        <div class="feature-card">
+            <h4>⚡ XSS (Reflected)</h4>
+            <p>検索結果ページで反射型XSSが発生</p>
+            <a href="/products" class="btn">試してみる</a>
+        </div>
+        
+        <div class="feature-card">
+            <h4>💾 XSS (Stored)</h4>
+            <p>レビュー機能で格納型XSSが可能</p>
+            <a href="/product/1" class="btn">試してみる</a>
+            <small style="display:block; margin-top:0.5rem; color:#666;">※ 商品ID: 1のみ</small>
+        </div>
+        
+        <div class="feature-card">
+            <h4>📁 パストラバーサル</h4>
+            <p>ファイル表示機能でディレクトリトラバーサルが可能</p>
+            <a href="/files" class="btn">試してみる</a>
+        </div>
+        
+        <div class="feature-card">
+            <h4>🛡️ セキュリティヘッダー欠如</h4>
+            <p>必要なセキュリティヘッダーが設定されていない</p>
+            <a href="/api/info" class="btn">API情報</a>
+        </div>
+    
+        <div class="feature-card">
+            <h4>🔐 CSRF (Cross-Site Request Forgery)</h4>
+            <p>アカウント設定でCSRFトークンなし</p>
+            <a href="/account/settings" class="btn">試してみる</a>
+        </div>
+
+        <div class="feature-card">
+            <h4>⚙️ Command Injection</h4>
+            <p>ネットワークツールでOSコマンドインジェクション</p>
+            <a href="/tools" class="btn">試してみる</a>
+        </div>
+
+        <div class="feature-card">
+            <h4>📦 Vulnerable Components (A06:2021)</h4>
+            <p>既知の脆弱性を持つ古いライブラリを使用</p>
+            <a href="/api/info" class="btn">詳細</a>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔀 Open Redirect (A01:2021)</h4>
+            <p>ログイン後のリダイレクトで外部サイトへ誘導可能</p>
+            <a href="/redirect?url=https://google.com" class="btn">試してみる</a>
+        </div>
+
+        <div class="feature-card">
+            <h4>📂 Directory Listing (A05:2021)</h4>
+            <p>アップロードディレクトリの一覧表示が可能</p>
+            <a href="/uploads" class="btn">試してみる</a>
+        </div>
+
+        <div class="feature-card">
+            <h4>🎯 Clickjacking (A04:2021)</h4>
+            <p>X-Frame-Options ヘッダーの欠如により iframe 埋め込み可能</p>
+            <a href="/clickjacking-demo" class="btn">試してみる</a>
+        </div>
+
+    
+    </div>
+</div>
+
+<div class="info-box" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1.5rem; margin: 2rem 0;">
+    <h3 style="color: #856404; margin-bottom: 0.5rem;">📝 レビュー投稿について</h3>
+    <p>XSS (Stored) のテストは <strong><a href="/product/1" style="color: #007bff;">商品ID: 1（ノートパソコン）</a></strong> でのみ可能です。</p>
+    <p>他の商品ではレビューの閲覧のみ可能です。</p>
+</div>
+
+<div class="warning">
+    <h3>⚠️ 警告</h3>
+    <p>このアプリケーションには<strong>意図的に脆弱性が含まれています</strong>。</p>
+    <p>本番環境や公開ネットワークには絶対にデプロイしないでください。</p>
+</div>
+{% endblock %}

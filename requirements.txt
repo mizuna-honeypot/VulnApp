@@ -1,0 +1,38 @@
+# ==========================================
+# VulnApp-Simple Dependencies
+# ==========================================
+
+# Web Framework (Intentionally outdated with known vulnerabilities)
+# Using compatible versions that still have known CVEs
+
+Flask==2.0.1              # CVE-2023-30861
+Werkzeug==2.0.1           # CVE-2023-25577
+Jinja2==3.0.0             # CVE-2024-22195
+click==8.0.0              # Required by Flask
+itsdangerous==2.0.0       # Required by Flask
+
+# ==========================================
+# Alternative: Use even older versions for more CVEs
+# Uncomment below and comment above for Flask 1.x
+# ==========================================
+
+# Flask==1.1.4              # Multiple CVEs
+# Werkzeug==1.0.1           # CVE-2023-25577, CVE-2022-29361
+# Jinja2==2.11.3            # CVE-2020-28493
+# click==7.1.2
+# itsdangerous==1.1.0
+
+# ==========================================
+# Additional vulnerable components (optional)
+# Note: These require system libraries to build
+# ==========================================
+
+# requests==2.25.1          # CVE-2023-32681
+# urllib3==1.26.4           # CVE-2021-33503
+# certifi==2020.12.5        # Outdated CA certificates
+
+# ==========================================
+# For scanner testing, the Flask/Werkzeug/Jinja2
+# vulnerabilities are sufficient to demonstrate
+# A06:2021 - Vulnerable and Outdated Components
+# ==========================================

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}脆弱性診断テストアプリ{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- 🚨 脆弱性5: セキュリティヘッダーの欠如 -->
+    <!-- X-Frame-Options, CSP, X-Content-Type-Options などが設定されていない -->
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="container">
+                <h1><a href="/">VulnApp</a></h1>
+                <ul>
+                    <li><a href="/">ホーム</a></li>
+                    <li><a href="/products">商品一覧</a></li>
+                    <li><a href="/files">ファイル表示</a></li>
+                    <li><a href="/tools">ネットワークツール</a></li>
+                    <li><a href="/account/settings">アカウント設定</a></li>
+                    
+                    <!-- Phase 2: 追加の脆弱性 -->
+                    <li><a href="/login">ログイン (Open Redirect)</a></li>
+                    <li><a href="/uploads">ファイル一覧</a></li>
+                    <li><a href="/clickjacking-demo">Clickjacking</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 VulnApp - 脆弱性診断用テストアプリケーション</p>
+            <p><small>⚠️ このアプリケーションには意図的に脆弱性が含まれています</small></p>
+        </div>
+    </footer>
+</body>
+</html>

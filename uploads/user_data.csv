@@ -1,0 +1,4 @@
+user_id,username,email,password_hash
+1,admin,admin@vulnapp.com,5f4dcc3b5aa765d61d8327deb882cf99
+2,alice,alice@vulnapp.com,098f6bcd4621d373cade4e832627b4f6
+3,bob,bob@vulnapp.com,5ebe2294ecd0e0f08eab7690d2a6ee69

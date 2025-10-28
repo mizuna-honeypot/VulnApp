@@ -1,0 +1,155 @@
+from flask import Flask, render_template, request, send_file
+import sqlite3
+import os
+
+app = Flask(__name__)
+
+# 末尾のスラッシュを柔軟に扱う
+app.url_map.strict_slashes = False
+
+# セキュリティヘッダーを意図的に設定しない（脆弱性5）
+# 本来は @app.after_request で設定すべき
+
+def get_db_connection():
+    """データベース接続を取得"""
+    conn = sqlite3.connect('vulnapp.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+@app.route('/')
+def index():
+    """トップページ"""
+    return render_template('index.html')
+
+
+@app.route('/products')
+def products():
+    """商品一覧ページ（検索機能付き）
+    
+    脆弱性1: SQLインジェクション
+    脆弱性2: XSS (Reflected)
+    """
+    search_query = request.args.get('search', '')
+    
+    conn = get_db_connection()
+    
+    if search_query:
+        # 🚨 脆弱性1: SQLインジェクション
+        # パラメータを直接SQL文に埋め込んでいる
+        query = f"SELECT * FROM products WHERE name LIKE '%{search_query}%' OR description LIKE '%{search_query}%'"
+        products = conn.execute(query).fetchall()
+    else:
+        products = conn.execute('SELECT * FROM products').fetchall()
+    
+    conn.close()
+    
+    # 🚨 脆弱性2: XSS (Reflected)
+    # search_queryをエスケープせずにテンプレートに渡す
+    return render_template('products.html', products=products, search_query=search_query)
+
+
+@app.route('/product/<int:product_id>')
+def product_detail(product_id):
+    """商品詳細ページ（レビュー表示）
+    
+    脆弱性3: XSS (Stored) - レビュー表示時
+    """
+    conn = get_db_connection()
+    
+    product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+    
+    if not product:
+        return '商品が見つかりません', 404
+    
+    # レビューを取得
+    reviews = conn.execute(
+        'SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC',
+        (product_id,)
+    ).fetchall()
+    
+    conn.close()
+    
+    # 🚨 脆弱性3: XSS (Stored)
+    # レビューのコメントをエスケープせずに表示
+    return render_template('product_detail.html', product=product, reviews=reviews)
+
+
+@app.route('/product/<int:product_id>/review', methods=['POST'])
+def add_review(product_id):
+    """レビュー投稿
+    
+    脆弱性3: XSS (Stored) - レビュー保存時
+    """
+    author = request.form.get('author', '匿名')
+    comment = request.form.get('comment', '')
+    rating = request.form.get('rating', 5)
+    
+    if not comment:
+        return 'コメントを入力してください', 400
+    
+    conn = get_db_connection()
+    
+    # 🚨 脆弱性3: XSS (Stored)
+    # ユーザー入力をサニタイズせずにデータベースに保存
+    conn.execute(
+        'INSERT INTO reviews (product_id, author, comment, rating) VALUES (?, ?, ?, ?)',
+        (product_id, author, comment, int(rating))
+    )
+    conn.commit()
+    conn.close()
+    
+    return f'''
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body>
+        <h2>レビューを投稿しました</h2>
+        <p><a href="/product/{product_id}">商品ページに戻る</a></p>
+    </body>
+    </html>
+    '''
+
+
+@app.route('/files')
+def file_view():
+    """ファイル表示機能
+    
+    脆弱性4: パストラバーサル
+    """
+    filename = request.args.get('file', '')
+    content = None
+    error = None
+    
+    if filename:
+        try:
+            # 🚨 脆弱性4: パストラバーサル
+            # ファイルパスの検証をせずに直接ファイルを読み込む
+            file_path = os.path.join('static/files', filename)
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception as e:
+            error = f'ファイルの読み込みに失敗しました: {str(e)}'
+    
+    return render_template('file_view.html', filename=filename, content=content, error=error)
+
+
+@app.route('/api/info')
+def api_info():
+    """API情報エンドポイント（デバッグ情報の漏洩例）"""
+    import sys
+    import flask
+    return {
+        'version': '1.0.0',
+        'python_version': sys.version,
+        'debug': True,
+        'database': 'vulnapp.db',
+        'framework': 'Flask ' + flask.__version__,
+        'werkzeug_version': flask.__version__
+    }
+
+
+if __name__ == '__main__':
+    # 🚨 脆弱性5: セキュリティヘッダーの欠如
+    # debug=True は本番環境では危険
+    app.run(host='0.0.0.0', port=5000, debug=True)
