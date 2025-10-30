@@ -116,7 +116,22 @@ Directory Listing
 curl http://localhost:5000/uploads curl http://localhost:5000/static/downloads
 
 📁 プロジェクト構造
-VulnApp-Simple/ ├── app.py # メインアプリケーション ├── init_db.py # データベース初期化スクリプト ├── requirements.txt # Python依存パッケージ ├── templates/ # HTMLテンプレート │ ├── base.html │ ├── index.html │ ├── search.html │ ├── comments.html │ ├── file.html │ ├── transfer.html │ ├── ping.html │ └── clickjacking_demo.html ├── static/ # 静的ファイル │ └── downloads/ # Directory Listing用 └── uploads/ # Directory Listing用
+VulnApp-Simple/
+├── app.py # メインアプリケーション 
+├── init_db.py # データベース初期化スクリプト 
+├── requirements.txt # Python依存パッケージ 
+├── templates/ # HTMLテンプレート
+│ ├── base.html
+│ ├── index.html
+│ ├── search.html
+│ ├── comments.html
+│ ├── file.html
+│ ├── transfer.html
+│ ├── ping.html
+│ └── clickjacking_demo.html
+├── static/ # 静的ファイル
+│ └── downloads/ # Directory Listing用
+└── uploads/ # Directory Listing用
 
 🔍 スキャナー検証
 このアプリケーションは以下のスキャナーで検証できます：
