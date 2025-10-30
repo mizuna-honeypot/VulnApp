@@ -54,6 +54,31 @@ python3 init_db.py
 アプリケーションを起動
 python3 app.py
 
+cd ~/VulnApp-Simple
+
+# すべてのPythonプロセスを停止
+pkill -9 -f python3
+sleep 2
+
+# データベースロックファイルを削除
+rm -f vulnapp.db-journal vulnapp.db-wal vulnapp.db-shm
+
+# ポート5000を解放
+sudo fuser -k 5000/tcp
+sleep 2
+
+# 再起動
+nohup python3 app.py > flask.log 2>&1 &
+sleep 3
+
+# プロセス確認
+ps aux | grep "python3 app.py" | grep -v grep
+
+# ログ確認
+echo "=== Flask起動ログ ==="
+tail -10 flask.log
+
+
 アプリケーションは http://localhost:5000 で起動します。
 
 🧪 脆弱性テスト例
