@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, Response
 import sqlite3
 import os
 import subprocess
@@ -7,12 +7,41 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import time 
 
+
+# カスタムResponseクラス: ヘッダーバリデーションを無効化
+from werkzeug.wrappers import Response as BaseResponse
+from werkzeug.datastructures import Headers
+
+class NoValidationResponse(BaseResponse):
+    """ヘッダーバリデーションをスキップするカスタムResponse"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # バリデーションをスキップするため、独自のヘッダーリストを使用
+        self._no_validation_headers = []
+    
+    def get_wsgi_headers(self, environ):
+        """WSGIヘッダーを取得（バリデーションなし）"""
+        headers = Headers()
+        
+        # 通常のヘッダーを追加
+        for key, value in super().get_wsgi_headers(environ):
+            if key.lower() != 'location':  # Locationは別処理
+                headers.add(key, value)
+        
+        # バリデーションなしのヘッダーを追加
+        for key, value in self._no_validation_headers:
+            headers._list.append((key, value))
+        
+        return headers
+
+
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
 def get_db_connection():
     """データベース接続を取得"""
-    conn = sqlite3.connect('vulnapp.db')
+    conn = sqlite3.connect('vulnapp.db', timeout=10.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     
     # Time-based SQLi 用のカスタム関数を追加
@@ -36,7 +65,7 @@ def index():
 @app.route('/products')
 def products():
     """商品一覧ページ（検索機能付き）
-    
+
     脆弱性1: SQLインジェクション
     脆弱性2: XSS (Reflected)
     """
@@ -44,22 +73,22 @@ def products():
     search_query = request.args.get('search', '')
     error_message = None
     products_list = []
-    
+
     conn = get_db_connection()
-    
-    if search_query:
-        try:
-            # 🚨 脆弱性1: SQLインジェクション
-            query = f"SELECT * FROM products WHERE name LIKE '%{search_query}%' OR description LIKE '%{search_query}%'"
-            products_list = conn.execute(query).fetchall()
-        except sqlite3.Error as e:
-            # 🚨 脆弱性: SQLエラーメッセージを表示
-            error_message = f"Database Error: {str(e)}\n\nExecuted Query: {query}"
-    else:
-        products_list = conn.execute('SELECT * FROM products').fetchall()
-    
-    conn.close()
-    
+    try:
+        if search_query:
+            try:
+                # 🚨 脆弱性1: SQLインジェクション
+                query = f"SELECT * FROM products WHERE name LIKE '%{search_query}%' OR description LIKE '%{search_query}%'"
+                products_list = conn.execute(query).fetchall()
+            except sqlite3.Error as e:
+                # 🚨 脆弱性: SQLエラーメッセージを表示
+                error_message = f"Database Error: {str(e)}\n\nExecuted Query: {query}"
+        else:
+            products_list = conn.execute('SELECT * FROM products').fetchall()
+    finally:
+        conn.close()
+
 
     # 🚨 脆弱性2: XSS (Reflected)
     return render_template('products.html',
@@ -68,144 +97,173 @@ def products():
                           error_message=error_message)
 
 
-@app.route('/product/<int:product_id>')
+
+@app.route('/product/search')
+def product_search():
+    """商品検索API（より検出されやすいSQLi）
+
+    脆弱性: SQL Injection (シンプルな実装)
+    例: /product/search?id=1 OR 1=1--
+    """
+    product_id = request.args.get('id', '')
+    error_message = None
+    products = []
+
+    conn = get_db_connection()
+    try:
+        if product_id:
+            try:
+                # 🚨 脆弱性: パラメータ化されていないクエリ
+                query = f"SELECT * FROM products WHERE id = {product_id}"
+                products = conn.execute(query).fetchall()
+            except sqlite3.Error as e:
+                error_message = f"SQL Error: {str(e)}\nQuery: {query}"
+    finally:
+        conn.close()
+
+    # テンプレートを使用してレンダリング
+    return render_template('sqli_search.html',
+                         product_id=product_id,
+                         error_message=error_message,
+                         products=products)
+
 def product_detail(product_id):
     """商品詳細ページ（レビュー表示）
-    
+
     脆弱性3: XSS (Stored)
     """
     conn = get_db_connection()
-    
-    product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
-    
-    if not product:
-        return '商品が見つかりません', 404
-    
-    reviews = conn.execute(
-        'SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC',
-        (product_id,)
-    ).fetchall()
-    
-    conn.close()
-    
+    try:
+        product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+
+        if not product:
+            return '商品が見つかりませんでした', 404
+
+        reviews = conn.execute(
+            'SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC LIMIT 50',
+            (product_id,)
+        ).fetchall()
+    finally:
+        conn.close()
+
     # 🚨 脆弱性3: XSS (Stored)
     return render_template('product_detail.html', product=product, reviews=reviews)
 
 
-@app.route('/product/<int:product_id>/review', methods=['POST'])
-def add_review(product_id):
-    """レビュー投稿
+
+
+@app.route('/product/<int:product_id>')
+def product_detail(product_id):
+    """商品詳細ページ
     
-    脆弱性3: XSS (Stored)
+    修正済み: SQLインジェクション対策（パラメータ化クエリ使用）
+    修正済み: XSS対策（テンプレートで自動エスケープ）
     """
-    author = request.form.get('author', '匿名')
-    comment = request.form.get('comment', '')
-    rating = request.form.get('rating', 5)
-    
-    if not comment:
-        return 'コメントを入力してください', 400
-    
     conn = get_db_connection()
-    
-    # 🚨 脆弱性3: XSS (Stored)
-    conn.execute(
-        'INSERT INTO reviews (product_id, author, comment, rating) VALUES (?, ?, ?, ?)',
-        (product_id, author, comment, int(rating))
-    )
-    conn.commit()
-    conn.close()
-    
-    return f'''
-    <html>
-    <head><meta charset="UTF-8"></head>
-    <body>
-        <h2>レビューを投稿しました</h2>
-        <p><a href="/product/{product_id}">商品ページに戻る</a></p>
-    </body>
-    </html>
-    '''
+    try:
+        cursor = conn.cursor()
 
+        # パラメータ化クエリでSQLインジェクション対策
+        cursor.execute('SELECT * FROM products WHERE id = ?', (product_id,))
+        product = cursor.fetchone()
 
-@app.route('/files')
-def file_view():
-    """ファイル表示機能
-    
-    脆弱性4: パストラバーサル
-    """
-    filename = request.args.get('file', '')
-    content = None
-    error = None
-    
-    if filename:
+        if not product:
+            return "商品が見つかりません", 404
+
+        # レビューも取得
+        cursor.execute('''
+            SELECT author, comment, rating, created_at
+            FROM reviews
+            WHERE product_id = ?
+            ORDER BY created_at DESC
+        ''', (product_id,))
+        reviews = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return render_template('product_detail.html', product=product, reviews=reviews)
+
+@app.route('/product/<int:product_id>/review', methods=['GET', 'POST'])
+def add_review(product_id):
+    """レビュー投稿 - CSRF Vulnerable"""
+
+    if request.method == 'POST':
+        # CSRFトークンチェックなし（意図的な脆弱性）
+        author = request.form.get('author', 'Anonymous')
+        comment = request.form.get('comment', '')
+        rating = request.form.get('rating', '5')
+        
+        # レート制限チェック（簡易版）
+        ip_address = request.remote_addr
+        if is_rate_limited(ip_address):
+            return render_template('product_review.html',
+                                 product_id=product_id,
+                                 error="Too many reviews. Please wait."), 429
+        
+        # DBに保存
+        conn = get_db_connection()
         try:
-            # 🚨 脆弱性4: パストラバーサル
-            if filename.startswith('/'):
-                file_path = filename
-            elif filename.startswith('..'):
-                base_dir = os.path.abspath(os.path.join(os.getcwd(), 'static', 'files'))
-                file_path = os.path.normpath(os.path.join(base_dir, filename))
-            else:
-                file_path = os.path.join(os.getcwd(), 'static', 'files', filename)
+            # rating の型変換エラーを防ぐ
+            try:
+                rating_int = int(rating)
+            except (ValueError, TypeError):
+                rating_int = 5
             
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
+            conn.execute(
+                "INSERT INTO reviews (product_id, author, comment, rating) VALUES (?, ?, ?, ?)",
+                (product_id, author, comment, rating_int)
+            )
+            conn.commit()
         except Exception as e:
-            error = f'ファイルの読み込みに失敗しました: {str(e)}'
+            print(f"Error saving review: {e}")
+        finally:
+            conn.close()
+        
+        # レビュー投稿後、商品ページにリダイレクト
+        return redirect(url_for('product_detail', product_id=product_id))
     
-    return render_template('file_view.html', filename=filename, content=content, error=error)
+    # GET: レビューフォームを表示
+    return render_template('product_review.html', product_id=product_id)
 
-
-@app.route('/api/info')
-def api_info():
-    """API情報エンドポイント（デバッグ情報の漏洩例）
-    
-    脆弱性5: 情報漏洩
-    """
-    import sys
-    import flask
-    
-    # 🚨 脆弱性5: デバッグ情報の漏洩
-    return {
-        'version': '1.0.0',
-        'python_version': sys.version,
-        'debug': app.debug,
-        'database': 'vulnapp.db',
-        'database_path': os.path.abspath('vulnapp.db'),
-        'framework': 'Flask ' + flask.__version__,
-        'server': 'Development Server',
-        'host': request.host,
-        'cwd': os.getcwd(),
-        'endpoints': [str(rule) for rule in app.url_map.iter_rules()]
-    }
-
-
-# ==========================================
-# CSRF Vulnerability
-# ==========================================
 @app.route('/account/settings', methods=['GET', 'POST'])
 def account_settings():
     """CSRF Vulnerable - No CSRF token validation"""
     if request.method == 'POST':
-        # CSRFトークンチェックなし（意図的な脆弱性）
+        # No CSRF token check (intentional vulnerability)
         email = request.form.get('email', '')
         username = request.form.get('username', '')
         
-        # 実際にはDBに保存しない（シンプルにするため）
+        # Not actually saving to DB (for simplicity)
         message = f"Settings updated! Email: {email}, Username: {username}"
         return render_template('account_settings.html',
                              message=message,
                              current_email=email,
                              current_username=username)
     
-    # デフォルト値
+    # Default values
     return render_template('account_settings.html',
                          current_email='user@example.com',
                          current_username='testuser')
-
-
-@app.route('/account/delete', methods=['POST'])
+@app.route('/account/delete', methods=['GET', 'POST'])
 def delete_account():
     """CSRF Vulnerable - Dangerous action without CSRF protection"""
+    
+    # GETメソッドの場合はエンドポイント情報を返す
+    if request.method == 'GET':
+        return jsonify({
+            "endpoint": "/account/delete",
+            "method": "POST",
+            "description": "Delete user account (CSRF Vulnerable)",
+            "required_parameters": {
+                "username": "string",
+                "confirm": "boolean"
+            },
+            "warning": "This endpoint is intentionally vulnerable to CSRF attacks",
+            "example": {
+                "username": "testuser",
+                "confirm": "true"
+            }
+        }), 200
     # CSRFトークンチェックなし（意図的な脆弱性）
     username = request.form.get('username', 'unknown')
     return f"Account deleted for user: {username} (Simulated)"
@@ -310,21 +368,30 @@ def is_rate_limited(ip_address, max_requests=10, time_window=60):
 @app.route('/redirect')
 def open_redirect():
     """Open Redirect Vulnerable - 任意URLへの無制限リダイレクト
-    
+
     注意: 外部サイトへの実際のリダイレクトは行わず、
     内部の偽ページにリダイレクトすることでスキャナーに検出させる
     """
     url = request.args.get('url', '/')
-    
+
     # 🚨 脆弱性: URLの検証を行わずにリダイレクト
     # スキャナーはパラメータが反映されることを検出
-    
+
     # 外部URLが指定された場合は、内部の偽ページにリダイレクト
     if url.startswith('http://') or url.startswith('https://'):
         # 外部URLのホスト名を抽出して表示
-        return redirect(url_for('fake_external_site', target=url))
+        # url_for でもエラーが出る可能性があるため、直接パスを構築
+        fake_url = f"/fake-external?target={url}"
+        response = NoValidationResponse("", status=302)
+        response._no_validation_headers.append(('Location', fake_url))
+        return response
+
+    # バリデーションなしのカスタムレスポンスを使用
+    response = NoValidationResponse("", status=302)
+    response._no_validation_headers.append(('Location', url))
     
-    return redirect(url)
+    return response
+
 
 
 @app.route('/fake-external')
@@ -348,6 +415,60 @@ def fake_external_site():
     </html>
     '''
 
+@app.route('/open-redirect-demo')
+def open_redirect_demo():
+    """Open Redirect vulnerability demo page"""
+    return render_template('open_redirect_demo.html')
+@app.route('/files')
+def file_view():
+    """File view function
+    
+    Vulnerability 4: Path Traversal
+    """
+    filename = request.args.get('file', '')
+    content = None
+    error = None
+    
+    if filename:
+        try:
+            # Vulnerability 4: Path Traversal
+            if filename.startswith('/'):
+                file_path = filename
+            elif filename.startswith('..'):
+                base_dir = os.path.abspath(os.path.join(os.getcwd(), 'static', 'files'))
+                file_path = os.path.normpath(os.path.join(base_dir, filename))
+            else:
+                file_path = os.path.join(os.getcwd(), 'static', 'files', filename)
+            
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception as e:
+            error = f'Failed to read file: {str(e)}'
+    
+    return render_template('file_view.html', filename=filename, content=content, error=error)
+
+@app.route('/api/info')
+def api_info():
+    """API information endpoint (debug info leakage example)
+    
+    Vulnerability 5: Information Disclosure
+    """
+    import sys
+    import flask
+    
+    # Vulnerability 5: Debug information leakage
+    return {
+        'version': '1.0.0',
+        'python_version': sys.version,
+        'debug': app.debug,
+        'database': 'vulnapp.db',
+        'database_path': os.path.abspath('vulnapp.db'),
+        'framework': 'Flask ' + flask.__version__,
+        'server': 'Development Server',
+        'host': request.host,
+        'cwd': os.getcwd(),
+        'endpoints': [str(rule) for rule in app.url_map.iter_rules()]
+    }
 @app.route('/login')
 def login_page():
     """ログインページ (Open Redirect のテスト用)"""
@@ -553,6 +674,56 @@ def clickjacking_attack():
         
         <hr>
         <p style="color: red;">⚠️ 上記の緑のボタンをクリックすると、実際には透明な iframe 内の「アカウント削除」ボタンがクリックされます</p>
+    </body>
+    </html>
+    '''
+
+
+# 管理用: レビュー削除エンドポイント
+@app.route('/admin/clear-reviews', methods=['GET', 'POST'])
+def clear_reviews():
+    """レビューを全削除する管理エンドポイント"""
+    if request.method == 'POST':
+        conn = get_db_connection()
+        deleted = conn.execute('DELETE FROM reviews').rowcount
+        conn.commit()
+        conn.close()
+        return f'''
+        <html>
+        <body>
+            <h2>✅ レビュー削除完了</h2>
+            <p>{deleted}件のレビューを削除しました</p>
+            <a href="/admin/clear-reviews">戻る</a> | <a href="/products">商品一覧</a>
+        </body>
+        </html>
+        '''
+    
+    # GET: 確認画面
+    conn = get_db_connection()
+    count = conn.execute('SELECT COUNT(*) as count FROM reviews').fetchone()['count']
+    conn.close()
+    
+    return f'''
+    <html>
+    <head>
+        <title>レビュー管理</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 50px; }}
+            .warning {{ color: red; font-weight: bold; }}
+            button {{ padding: 10px 20px; font-size: 16px; margin: 10px; }}
+            .delete-btn {{ background-color: #dc3545; color: white; border: none; cursor: pointer; }}
+            .cancel-btn {{ background-color: #6c757d; color: white; border: none; cursor: pointer; }}
+        </style>
+    </head>
+    <body>
+        <h2>📊 レビュー管理</h2>
+        <p>現在のレビュー数: <strong>{count}件</strong></p>
+        <p class="warning">⚠️ 警告: すべてのレビューが削除されます</p>
+        
+        <form method="POST" onsubmit="return confirm('本当に全てのレビューを削除しますか？');">
+            <button type="submit" class="delete-btn">🗑️ 全レビューを削除</button>
+            <button type="button" class="cancel-btn" onclick="location.href='/products'">キャンセル</button>
+        </form>
     </body>
     </html>
     '''

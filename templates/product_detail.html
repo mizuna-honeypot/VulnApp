@@ -14,7 +14,10 @@
 
 <!-- レビューセクション -->
 <div class="reviews-section">
-    <h3>レビュー ({{ reviews|length }}件)</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>レビュー ({{ reviews|length }}件)</h3>
+        <a href="/admin/clear-reviews" style="padding: 8px 16px; background-color: #ffc107; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; border: 2px solid #ff9800;">🔧 レビュー管理</a>
+    </div>
     
     <!-- 🚨 脆弱性3: XSS (Stored) -->
     {% for review in reviews %}
@@ -72,6 +75,7 @@
         <li><strong>HTMLインジェクション:</strong> <code>&lt;h1&gt;テスト&lt;/h1&gt;</code> や <code>&lt;img src=x onerror=alert('XSS')&gt;</code> も試せます</li>
     </ul>
 </div>
+
 {% else %}
 <div class="info-box" style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem; margin: 2rem 0; border-radius: 5px;">
     <h4>ℹ️ この商品はレビュー投稿できません</h4>
