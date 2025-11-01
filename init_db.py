@@ -8,6 +8,26 @@ def init_database():
     if os.path.exists('vulnapp.db'):
         os.remove('vulnapp.db')
     
+    # 必要なディレクトリを作成
+    directories = ['uploads', 'static/files']
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+        print(f'📁 ディレクトリ作成: {directory}')
+    
+    # uploadsディレクトリにサンプルファイルを作成
+    upload_files = {
+        'uploads/sample1.txt': 'これは公開されているサンプルファイルです。\nアップロードディレクトリの内容が誰でも閲覧できる状態になっています。',
+        'uploads/sample2.txt': 'ユーザーがアップロードしたファイル2\nこのファイルも公開されています。',
+        'uploads/confidential.txt': '機密情報：このファイルは本来非公開であるべきです。\nパスワード: SecretPassword123\nAPI Key: sk-1234567890abcdef',
+        'uploads/document.pdf': 'Test data for download',
+        'uploads/.gitkeep': '',
+    }
+    
+    for filepath, content in upload_files.items():
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f'📄 ファイル作成: {filepath}')
+    
     conn = sqlite3.connect('vulnapp.db')
     cursor = conn.cursor()
     
@@ -68,7 +88,7 @@ def init_database():
     conn.commit()
     conn.close()
     
-    print('✅ データベースの初期化が完了しました')
+    print('\n✅ データベースの初期化が完了しました')
     print('📊 商品数:', len(products))
     print('💬 レビュー数:', len(reviews))
 

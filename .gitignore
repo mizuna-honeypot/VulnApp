@@ -60,7 +60,8 @@ scan_results/
 no_errors.txt
 
 # Uploads
-uploads/
+uploads/*
+!uploads/.gitkeep
 *.tmp
 
 # IDE

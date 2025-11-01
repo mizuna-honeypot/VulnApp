@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}オープンリダイレクトのデモ{% endblock %}
+
+{% block content %}
+<div class="vuln-demo">
+    <h2>🔗 オープンリダイレクト (Open Redirect) のデモ</h2>
+    
+    <div class="warning-box">
+        <h3>⚠️ 脆弱性: オープンリダイレクト</h3>
+        <p>この機能は意図的にオープンリダイレクトの脆弱性を含んでいます。</p>
+        <p>攻撃者は正規のドメインを利用して、ユーザーを悪意のあるサイトへ誘導できます。</p>
+    </div>
+
+    <div class="demo-section">
+        <h3>リダイレクト機能</h3>
+        <p>以下のリンクをクリックすると、指定されたURLにリダイレクトされます。</p>
+        
+        <div class="link-examples">
+            <h4>安全な例（内部リンク）:</h4>
+            <ul>
+                <li><a href="/redirect?url=/products" class="safe-link">商品一覧へ</a></li>
+                <li><a href="/redirect?url=/product/1" class="safe-link">商品詳細へ</a></li>
+            </ul>
+
+            <h4>⚠️ 危険な例（外部サイトへのリダイレクト）:</h4>
+            <ul>
+                <li><a href="/redirect?url=https://example.com" class="danger-link">外部サイト (example.com)</a></li>
+                <li><a href="/redirect?url=https://google.com" class="danger-link">外部サイト (google.com)</a></li>
+                <li><a href="/redirect?url=http://malicious-site.com/phishing" class="danger-link">悪意のあるサイト（デモ）</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h3>💡 攻撃シナリオ</h3>
+        <p>攻撃者は以下のようなURLを作成し、ユーザーを騙すことができます：</p>
+        <div class="code-block">
+            <pre>https://vulnapp.com/redirect?url=http://evil-site.com/steal-credentials</pre>
+        </div>
+        <p>ユーザーは信頼できるドメイン（vulnapp.com）を見て安心し、リンクをクリックしてしまう可能性があります。</p>
+    </div>
+
+    <div class="demo-section">
+        <h3>🛠️ 手動テスト</h3>
+        <form method="GET" action="/redirect" class="test-form">
+            <label for="url">リダイレクト先URL:</label>
+            <input type="text" id="url" name="url" placeholder="https://example.com" style="width: 70%;">
+            <button type="submit" class="btn">リダイレクト</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h3>📖 技術的な説明</h3>
+        <div class="code-block">
+            <h4>脆弱なコード:</h4>
+            <pre>@app.route('/redirect')
+def redirect_page():
+    url = request.args.get('url', '/')
+    return redirect(url)  # 検証なしでリダイレクト</pre>
+        </div>
+        <div class="code-block">
+            <h4>安全なコード:</h4>
+            <pre>@app.route('/redirect')
+def redirect_page():
+    url = request.args.get('url', '/')
+    
+    # ホワイトリストによる検証
+    allowed_domains = ['vulnapp.com', 'localhost']
+    parsed = urlparse(url)
+    
+    if parsed.netloc and parsed.netloc not in allowed_domains:
+        return "Invalid redirect URL", 400
+    
+    return redirect(url)</pre>
+        </div>
+        <p><strong>対策:</strong></p>
+        <ul>
+            <li>リダイレクト先URLをホワイトリストで検証</li>
+            <li>相対パスのみを許可</li>
+            <li>外部URLへのリダイレクトには警告を表示</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.vuln-demo {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.demo-section {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.link-examples h4 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.link-examples ul {
+    list-style: none;
+    padding: 0;
+}
+
+.link-examples li {
+    margin: 10px 0;
+}
+
+.safe-link {
+    color: #28a745;
+    text-decoration: none;
+    padding: 8px 15px;
+    background-color: #d4edda;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.safe-link:hover {
+    background-color: #c3e6cb;
+}
+
+.danger-link {
+    color: #dc3545;
+    text-decoration: none;
+    padding: 8px 15px;
+    background-color: #f8d7da;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.danger-link:hover {
+    background-color: #f5c6cb;
+}
+
+.test-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.test-form label {
+    font-weight: bold;
+    width: 100%;
+}
+
+.test-form input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.code-block {
+    background-color: #fff;
+    border-left: 4px solid #007bff;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.code-block pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.code-block ul {
+    margin-top: 10px;
+}
+</style>
+{% endblock %}

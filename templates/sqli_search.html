@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}商品検索 - SQLインジェクションのデモ{% endblock %}
+
+{% block content %}
+<div class="vuln-demo">
+    <h2>🔍 商品検索 (SQLインジェクションのデモ)</h2>
+    
+    <div class="warning-box">
+        <h3>⚠️ 脆弱性: SQLインジェクション (A03:2021)</h3>
+        <p>この検索機能は意図的にSQLインジェクションの脆弱性を含んでいます。</p>
+    </div>
+
+    <div class="demo-section">
+        <h3>検索フォーム</h3>
+        <form method="GET" action="/product/search" class="search-form">
+            <label for="id">商品ID:</label>
+            <input type="text" id="id" name="id" value="{{ product_id }}" placeholder="例: 1">
+            <button type="submit" class="btn">検索</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h3>💡 試してみるペイロード</h3>
+        <ul class="payload-list">
+            <li><code>1 OR 1=1--</code> - 全商品を表示</li>
+            <li><code>1 UNION SELECT id, name, 'injected' as description, 0 as price FROM products--</code> - UNION攻撃</li>
+            <li><code>999 OR 1=1--</code> - 存在しないIDでも全商品表示</li>
+            <li><code>1; DROP TABLE products--</code> - 破壊的なクエリ（実際には実行されません）</li>
+        </ul>
+    </div>
+
+    {% if error_message %}
+    <div class="error-box">
+        <h3>🚨 SQLエラー</h3>
+        <pre>{{ error_message }}</pre>
+        <p class="info-leak">💡 このエラーメッセージは攻撃者にデータベース構造の情報を漏洩させています</p>
+    </div>
+    {% endif %}
+
+    {% if products %}
+    <div class="result-section">
+        <h3>検索結果 ({{ products|length }}件)</h3>
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <h4>{{ product['name'] }}</h4>
+                <p>{{ product['description'] }}</p>
+                <p class="price">¥{{ product['price'] }}</p>
+                <a href="/product/{{ product['id'] }}" class="btn">詳細を見る</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif product_id %}
+    <div class="info-box">
+        <p>検索結果が見つかりませんでした</p>
+    </div>
+    {% endif %}
+
+    <div class="demo-section">
+        <h3>📖 技術的な説明</h3>
+        <div class="code-block">
+            <h4>脆弱なコード:</h4>
+            <pre>query = f"SELECT * FROM products WHERE id = {product_id}"
+products = conn.execute(query).fetchall()</pre>
+        </div>
+        <div class="code-block">
+            <h4>安全なコード:</h4>
+            <pre>query = "SELECT * FROM products WHERE id = ?"
+products = conn.execute(query, (product_id,)).fetchall()</pre>
+        </div>
+        <p>パラメータ化されたクエリ（プリペアドステートメント）を使用することで、SQLインジェクションを防ぐことができます。</p>
+    </div>
+</div>
+
+<style>
+.vuln-demo {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.demo-section {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-form label {
+    font-weight: bold;
+}
+
+.search-form input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.payload-list {
+    list-style: none;
+    padding: 0;
+}
+
+.payload-list li {
+    background-color: #fff;
+    border-left: 4px solid #007bff;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: monospace;
+}
+
+.payload-list code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.error-box {
+    background-color: #f8d7da;
+    border: 2px solid #dc3545;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.error-box pre {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.info-leak {
+    color: #dc3545;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.info-box {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.result-section {
+    margin: 20px 0;
+}
+
+.code-block {
+    background-color: #fff;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.code-block pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.product-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    transition: box-shadow 0.3s;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.product-card h4 {
+    margin-top: 0;
+    color: #333;
+}
+
+.product-card .price {
+    color: #dc3545;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
