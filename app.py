@@ -653,6 +653,65 @@ def clickjacking_attack():
 
 
 # 管理用: レビュー削除エンドポイント
+
+
+# ==========================================
+# Stored XSS Vulnerability: Guestbook
+# ==========================================
+
+@app.route('/guestbook', methods=['GET', 'POST'])
+def guestbook():
+    """ゲストブック - Stored XSS Vulnerable
+    
+    GETとPOSTを同じエンドポイントで処理することで、
+    スキャナーがStored XSSを検出しやすくする
+    """
+    conn = get_db_connection()
+    
+    # POST: 新しいコメントを投稿
+    if request.method == 'POST':
+        name = request.form.get('name', 'Anonymous')
+        comment = request.form.get('comment', '')
+        
+        # 意図的な脆弱性: XSS対策なし
+        try:
+            conn.execute(
+                "INSERT INTO guestbook (name, comment, created_at) VALUES (?, ?, datetime('now'))",
+                (name, comment)
+            )
+            conn.commit()
+        except Exception as e:
+            print(f"Error saving guestbook entry: {e}")
+    
+    # GET: すべてのコメントを表示
+    try:
+        entries = conn.execute(
+            "SELECT id, name, comment, created_at FROM guestbook ORDER BY id DESC LIMIT 50"
+        ).fetchall()
+    except Exception as e:
+        print(f"Error fetching guestbook entries: {e}")
+        entries = []
+    finally:
+        conn.close()
+    
+    return render_template('guestbook.html', entries=entries)
+
+
+@app.route('/guestbook/clear', methods=['POST'])
+def clear_guestbook():
+    """ゲストブックをクリア（管理者用）"""
+    conn = get_db_connection()
+    try:
+        conn.execute("DELETE FROM guestbook")
+        conn.commit()
+    except Exception as e:
+        print(f"Error clearing guestbook: {e}")
+    finally:
+        conn.close()
+    
+    return redirect(url_for('guestbook'))
+
+
 @app.route('/admin/clear-reviews', methods=['GET', 'POST'])
 def clear_reviews():
     """レビューを全削除する管理エンドポイント"""
