@@ -364,28 +364,24 @@ def is_rate_limited(ip_address, max_requests=10, time_window=60):
 @app.route('/redirect')
 def open_redirect():
     """Open Redirect Vulnerable - 任意URLへの無制限リダイレクト
-
-    注意: 外部サイトへの実際のリダイレクトは行わず、
-    内部の偽ページにリダイレクトすることでスキャナーに検出させる
+    
+    🚨 脆弱性: URLの検証を一切行わずに、パラメータの値を
+    Locationヘッダーにそのまま設定してリダイレクト
     """
     url = request.args.get('url', '/')
-
-    # 🚨 脆弱性: URLの検証を行わずにリダイレクト
-    # スキャナーはパラメータが反映されることを検出
-
-    # 外部URLが指定された場合は、内部の偽ページにリダイレクト
-    if url.startswith('http://') or url.startswith('https://'):
-        # 外部URLのホスト名を抽出して表示
-        # url_for でもエラーが出る可能性があるため、直接パスを構築
-        fake_url = f"/fake-external?target={url}"
-        response = NoValidationResponse("", status=302)
-        response._no_validation_headers.append(('Location', fake_url))
-        return response
-
-    # バリデーションなしのカスタムレスポンスを使用
-    response = NoValidationResponse("", status=302)
-    response._no_validation_headers.append(('Location', url))
     
+    # 🚨 脆弱性ポイント: URL検証なし
+    # どんなURLでも受け入れてリダイレクト
+    # - 外部URL: http://evil.com
+    # - 相対パス: ../admin
+    # - プロトコル相対: //evil.com
+    # - JavaScript: javascript:alert('XSS')
+    
+    # Flaskのredirect()を使用すると検証が入るため、
+    # 直接Responseを返す
+    from flask import Response
+    response = Response("", status=302)
+    response.headers['Location'] = url  # 検証なしで直接設定
     return response
 
 
