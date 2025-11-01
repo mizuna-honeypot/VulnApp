@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}クリックジャッキングのデモ{% endblock %}
+
+{% block content %}
+<div class="vuln-demo">
+    <h2>🎯 クリックジャッキング (Clickjacking) のデモ</h2>
+    
+    <div class="warning-box">
+        <h3>⚠️ 脆弱性: クリックジャッキング (UI Redressing)</h3>
+        <p>この機能は意図的にX-Frame-Optionsヘッダーを設定していません。</p>
+        <p>攻撃者は透明なiframeを使用して、ユーザーを騙し、意図しないアクションを実行させることができます。</p>
+    </div>
+
+    <div class="demo-section">
+        <h3>脆弱なアクション例</h3>
+        <p>以下のボタンは、X-Frame-Optionsが設定されていないため、iframe内に埋め込み可能です。</p>
+        
+        <form method="POST" action="/account/delete" style="margin: 20px 0;">
+            <input type="hidden" name="username" value="victim">
+            <button type="submit" class="btn" style="background-color: #dc3545; padding: 15px 30px; font-size: 18px;">
+                🗑️ アカウントを削除
+            </button>
+        </form>
+        <p class="hint-text">※ このボタンは実際にアカウントを削除しませんが、脆弱性のデモです。</p>
+    </div>
+
+    <div class="demo-section">
+        <h3>💡 攻撃シナリオ</h3>
+        <ol>
+            <li><strong>攻撃者が悪意のあるページを作成</strong>
+                <ul>
+                    <li>魅力的な「無料ギフト」ボタンを表示</li>
+                    <li>その上に透明なiframeで脆弱なページを重ねる</li>
+                </ul>
+            </li>
+            <li><strong>ユーザーが「無料ギフト」をクリック</strong>
+                <ul>
+                    <li>実際には透明なiframe内の「アカウント削除」ボタンをクリック</li>
+                </ul>
+            </li>
+            <li><strong>ユーザーは気づかずに危険なアクションを実行</strong></li>
+        </ol>
+    </div>
+
+    <div class="demo-section">
+        <h3>🔴 攻撃者のページ例</h3>
+        <p>以下は、攻撃者が作成する悪意のあるページの例です：</p>
+        
+        <div style="border: 3px solid #dc3545; padding: 20px; background-color: #fff3cd; margin: 20px 0;">
+            <iframe src="/clickjacking-attack-demo" width="100%" height="350" style="border: 2px solid #dc3545;"></iframe>
+        </div>
+        
+        <p class="hint-text">
+            ⚠️ 上記のiframe内の緑のボタンをクリックすると、実際には透明な iframe 内の「アカウント削除」ボタンがクリックされます
+        </p>
+    </div>
+
+    <div class="demo-section">
+        <h3>🛡️ 対策方法</h3>
+        <div class="code-block">
+            <p><strong>1. X-Frame-Options ヘッダーの設定:</strong></p>
+            <pre>X-Frame-Options: DENY</pre>
+            <p>または特定のドメインのみ許可:</p>
+            <pre>X-Frame-Options: SAMEORIGIN</pre>
+            
+            <p><strong>2. Content-Security-Policy (CSP) の設定:</strong></p>
+            <pre>Content-Security-Policy: frame-ancestors 'none';</pre>
+            
+            <p><strong>3. Flaskでの実装例:</strong></p>
+            <pre>@app.after_request
+def add_security_headers(response):
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'none'"
+    return response</pre>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h3>🧪 テスト方法</h3>
+        <p>開発者ツールで以下を確認してください：</p>
+        <ul>
+            <li><strong>Response Headers</strong> で <code>X-Frame-Options</code> が存在しないことを確認</li>
+            <li>このページを別のページでiframe内に埋め込めることを確認</li>
+            <li>攻撃者のデモページで、透明なiframeが正しく重なっていることを確認</li>
+        </ul>
+    </div>
+
+    <p><a href="/" class="btn">← ホームに戻る</a></p>
+</div>
+
+<style>
+.vuln-demo {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.warning-box h3 {
+    color: #856404;
+    margin-top: 0;
+}
+
+.demo-section {
+    background-color: #f8f9fa;
+    padding: 25px;
+    margin: 25px 0;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.demo-section h3 {
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.demo-section ol, .demo-section ul {
+    line-height: 1.8;
+}
+
+.hint-text {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.code-block {
+    background-color: #fff;
+    border-left: 4px solid #dc3545;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.code-block pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.code-block p {
+    margin: 10px 0 5px 0;
+    font-weight: bold;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+</style>
+{% endblock %}

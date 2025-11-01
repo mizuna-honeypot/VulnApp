@@ -183,47 +183,43 @@ def product_detail(product_id):
 
     return render_template('product_detail.html', product=product, reviews=reviews)
 
-@app.route('/product/<int:product_id>/review', methods=['GET', 'POST'])
+@app.route('/product/<int:product_id>/review', methods=['POST'])
 def add_review(product_id):
-    """レビュー投稿 - CSRF Vulnerable"""
-
-    if request.method == 'POST':
-        # CSRFトークンチェックなし（意図的な脆弱性）
-        author = request.form.get('author', 'Anonymous')
-        comment = request.form.get('comment', '')
-        rating = request.form.get('rating', '5')
-        
-        # レート制限チェック（簡易版）
-        ip_address = request.remote_addr
-        if is_rate_limited(ip_address):
-            return render_template('product_review.html',
-                                 product_id=product_id,
-                                 error="Too many reviews. Please wait."), 429
-        
-        # DBに保存
-        conn = get_db_connection()
-        try:
-            # rating の型変換エラーを防ぐ
-            try:
-                rating_int = int(rating)
-            except (ValueError, TypeError):
-                rating_int = 5
-            
-            conn.execute(
-                "INSERT INTO reviews (product_id, author, comment, rating) VALUES (?, ?, ?, ?)",
-                (product_id, author, comment, rating_int)
-            )
-            conn.commit()
-        except Exception as e:
-            print(f"Error saving review: {e}")
-        finally:
-            conn.close()
-        
-        # レビュー投稿後、商品ページにリダイレクト
+    """レビュー投稿 - CSRF Vulnerable (POST専用)"""
+    
+    # CSRFトークンチェックなし（意図的な脆弱性）
+    author = request.form.get('author', 'Anonymous')
+    comment = request.form.get('comment', '')
+    rating = request.form.get('rating', '5')
+    
+    # レート制限チェック（簡易版）
+    ip_address = request.remote_addr
+    if is_rate_limited(ip_address):
+        # エラー時も商品ページにリダイレクト（flashメッセージで通知）
         return redirect(url_for('product_detail', product_id=product_id))
     
-    # GET: レビューフォームを表示
-    return render_template('product_review.html', product_id=product_id)
+    # DBに保存
+    conn = get_db_connection()
+    try:
+        # rating の型変換エラーを防ぐ
+        try:
+            rating_int = int(rating)
+        except (ValueError, TypeError):
+            rating_int = 5
+        
+        conn.execute(
+            "INSERT INTO reviews (product_id, author, comment, rating) VALUES (?, ?, ?, ?)",
+            (product_id, author, comment, rating_int)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Error saving review: {e}")
+    finally:
+        conn.close()
+    
+    # レビュー投稿後、商品ページにリダイレクト
+    return redirect(url_for('product_detail', product_id=product_id))
+
 
 @app.route('/account/settings', methods=['GET', 'POST'])
 def account_settings():
@@ -624,30 +620,7 @@ def clickjacking_demo():
     
     このページは iframe 内に埋め込み可能（X-Frame-Options がないため）
     """
-    return '''
-    <html>
-    <head><meta charset="UTF-8"><title>Clickjacking デモ</title></head>
-    <body>
-        <h2>🎯 Clickjacking 脆弱性デモ</h2>
-        <p>このページは X-Frame-Options ヘッダーが設定されていないため、iframe 内に埋め込むことができます。</p>
-        
-        <h3>脆弱なアクション:</h3>
-        <form method="POST" action="/account/delete">
-            <input type="hidden" name="username" value="victim">
-            <button type="submit" style="padding: 20px; font-size: 18px; background-color: red; color: white;">
-                🗑️ アカウントを削除
-            </button>
-        </form>
-        
-        <hr>
-        <h3>攻撃者のページ例:</h3>
-        <iframe src="/clickjacking-attack-demo" width="100%" height="300" style="border: 2px solid red;"></iframe>
-        
-        <hr>
-        <p><a href="/">ホームに戻る</a></p>
-    </body>
-    </html>
-    '''
+    return render_template('clickjacking_demo.html')
 
 
 @app.route('/clickjacking-attack-demo')
