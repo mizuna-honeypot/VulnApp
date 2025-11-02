@@ -1,106 +1,258 @@
 {% extends "base.html" %}
 
-{% block title %}Guestbook - VulnApp{% endblock %}
+{% block title %}ゲストブック - Stored XSS デモ{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>📖 Guestbook</h1>
-    <p class="lead">Leave your message here!</p>
-
-    <!-- 脆弱性警告 -->
-    <div class="alert alert-danger" role="alert">
-        <h4 class="alert-heading">⚠️ Stored XSS Vulnerability</h4>
-        <p>このゲストブックは<strong>意図的に脆弱</strong>です：</p>
-        <ul class="mb-0">
-            <li>ユーザー入力の<strong>サニタイゼーション処理なし</strong></li>
-            <li>投稿されたコメントは<strong>そのままHTMLとして表示</strong>される</li>
-            <li>XSSペイロードが<strong>データベースに保存</strong>され、全ユーザーに影響</li>
-        </ul>
+<div class="vuln-demo">
+    <h2>📝 ゲストブック (Stored XSS のデモ)</h2>
+    
+    <div class="warning-box">
+        <h3>⚠️ 脆弱性: Stored XSS (A03:2021)</h3>
+        <p>このゲストブックは意図的にStored XSS（格納型クロスサイトスクリプティング）の脆弱性を含んでいます。</p>
     </div>
 
-    <!-- 投稿フォーム -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">✍️ Post a Message</h5>
-        </div>
-        <div class="card-body">
-            <form method="POST" action="/guestbook">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Name:</label>
-                    <input type="text" class="form-control" id="name" name="name" 
-                           placeholder="Your name" required>
-                </div>
-                <div class="mb-3">
-                    <label for="comment" class="form-label">Message:</label>
-                    <textarea class="form-control" id="comment" name="comment" 
-                              rows="3" placeholder="Your message..." required></textarea>
-                    <div class="form-text">
-                        ⚠️ Warning: Input is NOT sanitized. XSS payloads will be executed.
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Post Message</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- メッセージ一覧 -->
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">💬 Messages ({{ entries|length }})</h5>
-        </div>
-        <div class="card-body">
-            {% if entries %}
-                {% for entry in entries %}
-                <div class="border-bottom pb-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <strong>{{ entry.name }}</strong>
-                            <small class="text-muted">{{ entry.created_at }}</small>
-                        </div>
-                        <span class="badge bg-danger">ID: {{ entry.id }}</span>
-                    </div>
-                    <div class="mt-2">
-                        <!-- 意図的な脆弱性: |safe フィルタでXSS可能 -->
-                        {{ entry.comment | safe }}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-muted">No messages yet. Be the first to post!</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- 管理者用：クリアボタン -->
-    <div class="mt-3">
-        <form method="POST" action="/guestbook/clear" 
-              onsubmit="return confirm('Are you sure you want to clear all messages?');">
-            <button type="submit" class="btn btn-danger btn-sm">
-                🗑️ Clear All Messages (Admin)
-            </button>
+    <div class="demo-section">
+        <h3>メッセージを投稿</h3>
+        <form method="POST" action="/guestbook" class="guestbook-form">
+            <div class="form-group">
+                <label for="name">名前:</label>
+                <input type="text" id="name" name="name" placeholder="匿名" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label for="comment">メッセージ:</label>
+                <textarea id="comment" name="comment" rows="4" placeholder="メッセージを入力してください..." required></textarea>
+            </div>
+            <button type="submit" class="btn">投稿する</button>
         </form>
     </div>
 
-    <!-- 攻撃例 -->
-    <div class="card mt-4">
-        <div class="card-header bg-warning">
-            <h5 class="mb-0">🎯 Attack Examples</h5>
-        </div>
-        <div class="card-body">
-            <h6>Test Payloads for Stored XSS:</h6>
-            <pre class="bg-light p-3"><code>&lt;script&gt;alert('XSS')&lt;/script&gt;
-&lt;img src=x onerror="alert('XSS')"&gt;
-&lt;svg/onload=alert('XSS')&gt;
-&lt;iframe src="javascript:alert('XSS')"&gt;&lt;/iframe&gt;</code></pre>
-
-            <h6 class="mt-3">curl command example:</h6>
-            <pre class="bg-light p-3"><code>curl -X POST http://18.179.9.154/guestbook \
-  -d "name=Hacker&comment=&lt;script&gt;alert('Stored XSS')&lt;/script&gt;"</code></pre>
-        </div>
+    <div class="demo-section">
+        <h3>💡 試してみるペイロード</h3>
+        <ul class="payload-list">
+            <li><code>&lt;script&gt;alert('Stored XSS')&lt;/script&gt;</code> - 基本的なXSS</li>
+            <li><code>&lt;img src=x onerror=alert('XSS')&gt;</code> - イベントハンドラを使用</li>
+            <li><code>&lt;svg/onload=alert('XSS')&gt;</code> - SVGタグを使用</li>
+            <li><code>&lt;iframe src="javascript:alert('XSS')"&gt;</code> - iframeを使用</li>
+        </ul>
     </div>
 
-    <div class="mt-4">
-        <a href="/" class="btn btn-secondary">← Back to Home</a>
+    {% if entries %}
+    <div class="result-section">
+        <h3>投稿メッセージ ({{ entries|length }}件)</h3>
+        <div class="messages-container">
+            {% for entry in entries %}
+            <div class="message-card">
+                <div class="message-header">
+                    <strong>{{ entry.name }}</strong>
+                    <span class="message-date">{{ entry.created_at }}</span>
+                </div>
+                <div class="message-body">
+                    <!-- 🚨 意図的な脆弱性: safeフィルタでXSS可能 -->
+                    {{ entry.comment | safe }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="info-box">
+        <p>まだメッセージがありません。最初の投稿者になりましょう！</p>
+    </div>
+    {% endif %}
+
+    <div class="demo-section">
+        <h3>📖 技術的な説明</h3>
+        <div class="code-block">
+            <h4>脆弱なコード:</h4>
+            <pre>&lt;div&gt;{% raw %}{{ entry.comment | safe }}{% endraw %}&lt;/div&gt;</pre>
+            <p>Jinjaテンプレートの<code>| safe</code>フィルタは、HTMLエスケープを無効化します。</p>
+        </div>
+        <div class="code-block">
+            <h4>安全なコード:</h4>
+            <pre>&lt;div&gt;{% raw %}{{ entry.comment }}{% endraw %}&lt;/div&gt;</pre>
+            <p><code>| safe</code>フィルタを削除することで、自動的にHTMLエスケープされます。</p>
+        </div>
+        <p>ユーザー入力を表示する際は、必ず適切にエスケープまたはサニタイズを行うことで、XSSを防ぐことができます。</p>
+    </div>
+
+    <!-- 管理者用：クリアボタン -->
+    <div class="admin-section">
+        <form method="POST" action="/guestbook/clear" 
+              onsubmit="return confirm('本当に全てのメッセージを削除しますか？');">
+            <button type="submit" class="btn btn-danger">
+                🗑️ 全メッセージを削除（管理者用）
+            </button>
+        </form>
     </div>
 </div>
+
+<style>
+.vuln-demo {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.demo-section {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.guestbook-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.payload-list {
+    list-style: none;
+    padding: 0;
+}
+
+.payload-list li {
+    background-color: #fff;
+    border-left: 4px solid #007bff;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: monospace;
+}
+
+.payload-list code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.info-box {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.result-section {
+    margin: 20px 0;
+}
+
+.messages-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.message-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    transition: box-shadow 0.3s;
+}
+
+.message-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.message-header strong {
+    color: #333;
+    font-size: 1.1em;
+}
+
+.message-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.message-body {
+    color: #555;
+    line-height: 1.6;
+}
+
+.code-block {
+    background-color: #fff;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.code-block pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.code-block code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.admin-section {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8d7da;
+    border: 2px solid #dc3545;
+    border-radius: 5px;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+</style>
 {% endblock %}

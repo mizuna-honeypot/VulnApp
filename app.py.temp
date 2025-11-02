@@ -3,7 +3,6 @@ import sqlite3
 import os
 import subprocess
 import platform
-import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 import time 
@@ -128,6 +127,28 @@ def product_search():
                          error_message=error_message,
                          products=products)
 
+def product_detail(product_id):
+    """商品詳細ページ（レビュー表示）
+
+    脆弱性3: XSS (Stored)
+    """
+    conn = get_db_connection()
+    try:
+        product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+
+        if not product:
+            return '商品が見つかりませんでした', 404
+
+        reviews = conn.execute(
+            'SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC LIMIT 50',
+            (product_id,)
+        ).fetchall()
+    finally:
+        conn.close()
+
+    # 🚨 脆弱性3: XSS (Stored)
+    return render_template('product_detail.html', product=product, reviews=reviews)
+
 
 
 
@@ -149,11 +170,58 @@ def product_detail(product_id):
         if not product:
             return "商品が見つかりません", 404
 
+        # レビューも取得
+        cursor.execute('''
+            SELECT author, comment, rating, created_at
+            FROM reviews
+            WHERE product_id = ?
+            ORDER BY created_at DESC
+        ''', (product_id,))
+        reviews = cursor.fetchall()
     finally:
         conn.close()
 
-    return render_template('product_detail.html', product=product)
+    return render_template('product_detail.html', product=product, reviews=reviews)
 
+@app.route('/product/<int:product_id>/review', methods=['POST'])
+def add_review(product_id):
+    """レビュー投稿 - CSRF Vulnerable (POST専用)"""
+    
+    # CSRFトークンチェックなし（意図的な脆弱性）
+    author = request.form.get('author', 'Anonymous')
+    comment = request.form.get('comment', '')
+    rating = request.form.get('rating', '5')
+    
+    # レート制限チェック（簡易版）
+    ip_address = request.remote_addr
+    if is_rate_limited(ip_address):
+        # エラー時も商品ページにリダイレクト（flashメッセージで通知）
+        return redirect(url_for('product_detail', product_id=product_id))
+    
+    # DBに保存
+    conn = get_db_connection()
+    try:
+        # rating の型変換エラーを防ぐ
+        try:
+            rating_int = int(rating)
+        except (ValueError, TypeError):
+            rating_int = 5
+        
+        conn.execute(
+            "INSERT INTO reviews (product_id, author, comment, rating) VALUES (?, ?, ?, ?)",
+            (product_id, author, comment, rating_int)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Error saving review: {e}")
+    finally:
+        conn.close()
+    
+    # レビュー投稿後、商品ページにリダイレクト
+    return redirect(url_for('product_detail', product_id=product_id))
+
+
+@app.route('/account/settings', methods=['GET', 'POST'])
 def account_settings():
     """CSRF Vulnerable - No CSRF token validation"""
     if request.method == 'POST':
@@ -370,71 +438,6 @@ def file_view():
             error = f'Failed to read file: {str(e)}'
     
     return render_template('file_view.html', filename=filename, content=content, error=error)
-
-@app.route('/vulnerable-components')
-def vulnerable_components():
-    """Vulnerable Components information page
-    
-    Vulnerability 8: Vulnerable Components (A06:2021)
-    Displays information about intentionally vulnerable packages
-    """
-    return render_template('vulnerable_components.html')
-@app.route('/security-headers')
-def security_headers():
-    """Security Headers information page
-    
-    Vulnerability 5: Missing Security Headers
-    Displays information about missing security headers
-    """
-    return render_template('security_headers.html')
-
-
-@app.route('/component-versions')
-def component_versions():
-    """Vulnerable Components version disclosure endpoint
-    
-    Intentionally exposes all component versions for security scanner detection
-    """
-    import flask
-    import jinja2
-    import yaml
-    import werkzeug
-    
-    return jsonify({
-        'framework': {
-            'Flask': flask.__version__,
-            'Werkzeug': werkzeug.__version__
-        },
-        'template_engine': {
-            'Jinja2': jinja2.__version__
-        },
-        'libraries': {
-            'PyYAML': yaml.__version__
-        },
-        'python': {
-            'version': sys.version
-        },
-        'warning': 'These versions contain known security vulnerabilities. DO NOT use in production!'
-    })
-
-@app.route('/trigger-version-error')
-def trigger_version_error():
-    """Trigger error page with version information
-    
-    Deliberately causes an exception that exposes component versions in stack trace
-    """
-    import flask
-    import jinja2
-    import yaml
-    
-    # Intentionally raise exception with version info
-    raise Exception(
-        f"Component Versions - "
-        f"Flask {flask.__version__}, "
-        f"Jinja2 {jinja2.__version__}, "
-        f"PyYAML {yaml.__version__}"
-    )
-
 
 @app.route('/api/info')
 def api_info():
@@ -705,29 +708,54 @@ def clear_guestbook():
     return redirect(url_for('guestbook'))
 
 
+@app.route('/admin/clear-reviews', methods=['GET', 'POST'])
+def clear_reviews():
+    """レビューを全削除する管理エンドポイント"""
+    if request.method == 'POST':
+        conn = get_db_connection()
+        deleted = conn.execute('DELETE FROM reviews').rowcount
+        conn.commit()
+        conn.close()
+        return f'''
+        <html>
+        <body>
+            <h2>✅ レビュー削除完了</h2>
+            <p>{deleted}件のレビューを削除しました</p>
+            <a href="/admin/clear-reviews">戻る</a> | <a href="/products">商品一覧</a>
+        </body>
+        </html>
+        '''
+    
+    # GET: 確認画面
+    conn = get_db_connection()
+    count = conn.execute('SELECT COUNT(*) as count FROM reviews').fetchone()['count']
+    conn.close()
+    
+    return f'''
+    <html>
+    <head>
+        <title>レビュー管理</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 50px; }}
+            .warning {{ color: red; font-weight: bold; }}
+            button {{ padding: 10px 20px; font-size: 16px; margin: 10px; }}
+            .delete-btn {{ background-color: #dc3545; color: white; border: none; cursor: pointer; }}
+            .cancel-btn {{ background-color: #6c757d; color: white; border: none; cursor: pointer; }}
+        </style>
+    </head>
+    <body>
+        <h2>📊 レビュー管理</h2>
+        <p>現在のレビュー数: <strong>{count}件</strong></p>
+        <p class="warning">⚠️ 警告: すべてのレビューが削除されます</p>
+        
+        <form method="POST" onsubmit="return confirm('本当に全てのレビューを削除しますか？');">
+            <button type="submit" class="delete-btn">🗑️ 全レビューを削除</button>
+            <button type="button" class="cancel-btn" onclick="location.href='/products'">キャンセル</button>
+        </form>
+    </body>
+    </html>
+    '''
 
-# Add custom headers to expose component versions (Vulnerability: Information Disclosure)
-@app.after_request
-def add_version_headers(response):
-    """Add custom headers exposing component versions
-    
-    Vulnerability: Information Disclosure
-    Intentionally exposes all component versions in HTTP headers for scanner detection
-    """
-    import flask
-    import jinja2
-    import yaml
-    import werkzeug
-    
-    # Add custom headers with version information
-    response.headers['X-Powered-By'] = f'Flask/{flask.__version__}'
-    response.headers['X-Template-Engine'] = f'Jinja2/{jinja2.__version__}'
-    response.headers['X-YAML-Parser'] = f'PyYAML/{yaml.__version__}'
-    response.headers['X-WSGI-Server'] = f'Werkzeug/{werkzeug.__version__}'
-    response.headers['X-Component-Versions'] = f'Flask/{flask.__version__}, Jinja2/{jinja2.__version__}, PyYAML/{yaml.__version__}'
-    
-    return response
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     # 🚨 脆弱性5: セキュリティヘッダーの欠如
     app.run(host='0.0.0.0', port=80, debug=True)

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Headers 欠如 - VulnApp</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .header-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-card h3 {
+            color: #e74c3c;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .severity-high {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .severity-medium {
+            background-color: #f39c12;
+            color: white;
+        }
+        .header-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .header-info strong {
+            color: #2c3e50;
+        }
+        .risk-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .risk-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .risk-list li:last-child {
+            border-bottom: none;
+        }
+        .risk-list li::before {
+            content: "⚠️ ";
+            margin-right: 8px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-box h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .success-box {
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success-box h3 {
+            color: #155724;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #3498db;
+            color: white;
+        }
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-missing {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .status-present {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .test-section {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ セキュリティヘッダー欠如 (A05:2021)</h1>
+        <p class="description">
+            このページでは、VulnAppに意図的に<strong>設定していないセキュリティヘッダー</strong>について説明します。
+            これらのHTTPレスポンスヘッダーは、様々な攻撃からWebアプリケーションを保護するために重要です。
+        </p>
+
+        <div class="warning-box">
+            <h3>⚠️ 重要な警告</h3>
+            <p>
+                このアプリケーションは<strong>意図的にセキュリティヘッダーを設定していません</strong>。
+                実際の本番環境では、すべての推奨セキュリティヘッダーを適切に設定してください。
+            </p>
+        </div>
+
+        <!-- 現在の状態 -->
+        <h2>📊 VulnAppの現在の状態</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>セキュリティヘッダー</th>
+                    <th>状態</th>
+                    <th>影響</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>X-Frame-Options</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>Clickjacking攻撃に脆弱</td>
+                </tr>
+                <tr>
+                    <td>Content-Security-Policy (CSP)</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>XSS攻撃に脆弱</td>
+                </tr>
+                <tr>
+                    <td>X-Content-Type-Options</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>MIME Type Sniffing攻撃に脆弱</td>
+                </tr>
+                <tr>
+                    <td>Strict-Transport-Security (HSTS)</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>Man-in-the-Middle攻撃に脆弱</td>
+                </tr>
+                <tr>
+                    <td>X-XSS-Protection</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>XSS攻撃に脆弱（レガシーブラウザ）</td>
+                </tr>
+                <tr>
+                    <td>Referrer-Policy</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>Referer情報漏洩</td>
+                </tr>
+                <tr>
+                    <td>Permissions-Policy</td>
+                    <td class="status-missing">❌ 未設定</td>
+                    <td>不要な機能へのアクセス許可</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 各ヘッダーの詳細 -->
+        <h2>📋 各セキュリティヘッダーの詳細</h2>
+
+        <!-- X-Frame-Options -->
+        <div class="header-card">
+            <h3>
+                🖼️ X-Frame-Options
+                <span class="severity-badge severity-high">HIGH</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> Clickjacking攻撃の防止</p>
+                <p><strong>現在の状態:</strong> 未設定（全ページでiframe埋め込み可能）</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>悪意のあるサイトがVulnAppをiframeで埋め込み可能</li>
+                <li>透明なレイヤーを使用したクリック誘導攻撃</li>
+                <li>ユーザーの意図しない操作を実行させられる</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">X-Frame-Options: DENY
+# または
+X-Frame-Options: SAMEORIGIN</div>
+        </div>
+
+        <!-- Content-Security-Policy -->
+        <div class="header-card">
+            <h3>
+                🔒 Content-Security-Policy (CSP)
+                <span class="severity-badge severity-high">HIGH</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> XSS攻撃とデータインジェクション攻撃の防止</p>
+                <p><strong>現在の状態:</strong> 未設定（任意のスクリプト実行可能）</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>インラインスクリプトの無制限実行</li>
+                <li>外部ドメインからのスクリプト読み込み</li>
+                <li>eval()等の危険な関数の使用</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:</div>
+        </div>
+
+        <!-- X-Content-Type-Options -->
+        <div class="header-card">
+            <h3>
+                📄 X-Content-Type-Options
+                <span class="severity-badge severity-medium">MEDIUM</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> MIME Type Sniffing攻撃の防止</p>
+                <p><strong>現在の状態:</strong> 未設定（ブラウザがMIME Typeを推測）</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>画像ファイルがJavaScriptとして実行される可能性</li>
+                <li>Content-Typeヘッダーの無視によるセキュリティバイパス</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">X-Content-Type-Options: nosniff</div>
+        </div>
+
+        <!-- Strict-Transport-Security -->
+        <div class="header-card">
+            <h3>
+                🔐 Strict-Transport-Security (HSTS)
+                <span class="severity-badge severity-high">HIGH</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> HTTPS接続の強制とMan-in-the-Middle攻撃の防止</p>
+                <p><strong>現在の状態:</strong> 未設定（HTTP接続が許可される）</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>初回アクセス時のHTTP通信が傍受される可能性</li>
+                <li>SSLストリッピング攻撃に脆弱</li>
+                <li>中間者攻撃によるデータ盗聴</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">Strict-Transport-Security: max-age=31536000; includeSubDomains; preload</div>
+        </div>
+
+        <!-- X-XSS-Protection -->
+        <div class="header-card">
+            <h3>
+                🛡️ X-XSS-Protection
+                <span class="severity-badge severity-medium">MEDIUM</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> ブラウザ内蔵のXSSフィルターの有効化（レガシー）</p>
+                <p><strong>現在の状態:</strong> 未設定</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>古いブラウザでのXSS攻撃に対する保護なし</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">X-XSS-Protection: 1; mode=block</div>
+            <p><small>※ 現代のブラウザではCSPが推奨されます</small></p>
+        </div>
+
+        <!-- Referrer-Policy -->
+        <div class="header-card">
+            <h3>
+                🔗 Referrer-Policy
+                <span class="severity-badge severity-medium">MEDIUM</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> Referer情報の漏洩防止</p>
+                <p><strong>現在の状態:</strong> 未設定（完全なURLが送信される）</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>URLパラメータに含まれる機密情報の漏洩</li>
+                <li>セッショントークンやAPIキーの露出</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">Referrer-Policy: strict-origin-when-cross-origin</div>
+        </div>
+
+        <!-- Permissions-Policy -->
+        <div class="header-card">
+            <h3>
+                🎛️ Permissions-Policy
+                <span class="severity-badge severity-medium">MEDIUM</span>
+            </h3>
+            <div class="header-info">
+                <p><strong>目的:</strong> ブラウザ機能へのアクセス制御</p>
+                <p><strong>現在の状態:</strong> 未設定（すべての機能が利用可能）</p>
+            </div>
+            <h4>⚠️ リスク</h4>
+            <ul class="risk-list">
+                <li>カメラ、マイク等への不要なアクセス許可</li>
+                <li>位置情報の取得</li>
+            </ul>
+            <h4>✅ 推奨設定</h4>
+            <div class="code-block">Permissions-Policy: geolocation=(), microphone=(), camera=()</div>
+        </div>
+
+        <!-- 検証方法 -->
+        <h2>🔍 セキュリティヘッダーの確認方法</h2>
+        <div class="test-section">
+            <h4>1. ブラウザ開発者ツール</h4>
+            <ol>
+                <li>F12キーで開発者ツールを開く</li>
+                <li>「Network」タブを選択</li>
+                <li>ページをリロード</li>
+                <li>最初のリクエストをクリック</li>
+                <li>「Headers」セクションで「Response Headers」を確認</li>
+            </ol>
+
+            <h4>2. curlコマンド</h4>
+            <div class="code-block">curl -I http://54.65.251.49/</div>
+
+            <h4>3. オンラインツール</h4>
+            <ul>
+                <li><a href="https://securityheaders.com/" target="_blank">SecurityHeaders.com</a></li>
+                <li><a href="https://observatory.mozilla.org/" target="_blank">Mozilla Observatory</a></li>
+            </ul>
+        </div>
+
+        <!-- Flask実装例 -->
+        <h2>💻 Flaskでの実装例</h2>
+        <div class="success-box">
+            <h3>✅ セキュアな実装方法</h3>
+            <p>本番環境では、以下のようにセキュリティヘッダーを設定してください：</p>
+        </div>
+        <div class="code-block">from flask import Flask, make_response
+
+app = Flask(__name__)
+
+@app.after_request
+def set_security_headers(response):
+    # Clickjacking対策
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # XSS対策
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+    
+    # MIME Sniffing対策
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # HTTPS強制（HTTPS使用時のみ）
+    # response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # レガシーXSS保護
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Referer制御
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # 機能制限
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    
+    return response</div>
+
+        <!-- ベストプラクティス -->
+        <div class="success-box">
+            <h3>🛡️ セキュリティのベストプラクティス</h3>
+            <ul>
+                <li>すべての推奨セキュリティヘッダーを設定する</li>
+                <li>CSPは段階的に厳格化する（Report-Onlyモードを活用）</li>
+                <li>HSTSはテスト後にmax-ageを長くする</li>
+                <li>定期的にセキュリティヘッダーの設定を見直す</li>
+                <li>WAF（Web Application Firewall）の導入も検討する</li>
+                <li>セキュリティスキャンツールで定期的に検証する</li>
+            </ul>
+        </div>
+
+        <a href="/" class="back-link">← トップページに戻る</a>
+    </div>
+</body>
+</html>

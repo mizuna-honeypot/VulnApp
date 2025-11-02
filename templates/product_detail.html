@@ -12,76 +12,15 @@
 
 <hr>
 
-<!-- レビューセクション -->
-<div class="reviews-section">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3>レビュー ({{ reviews|length }}件)</h3>
-        <a href="/admin/clear-reviews" style="padding: 8px 16px; background-color: #ffc107; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; border: 2px solid #ff9800;">🔧 レビュー管理</a>
-    </div>
-    
-    <!-- 🚨 脆弱性3: XSS (Stored) -->
-    {% for review in reviews %}
-    <div class="review-card">
-        <div class="review-header">
-            <strong>{{ review.author }}</strong>
-            <span class="rating">評価: {{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
-        </div>
-        <!-- safeフィルタで意図的にエスケープを無効化 -->
-        <p class="review-comment">{{ review.comment | safe }}</p>
-        <small class="review-date">{{ review.created_at }}</small>
-    </div>
-    {% else %}
-    <p>まだレビューがありません。</p>
-    {% endfor %}
-</div>
-
-<hr>
-
-<!-- レビュー投稿フォーム（商品ID=1のみ表示） -->
-{% if product.id == 1 %}
-<div class="review-form">
-    <h3>レビューを投稿</h3>
-    <form method="POST" action="/product/{{ product.id }}/review">
-        <div class="form-group">
-            <label for="author">名前:</label>
-            <input type="text" id="author" name="author" placeholder="匿名" maxlength="50">
-        </div>
-        
-        <div class="form-group">
-            <label for="rating">評価:</label>
-            <select id="rating" name="rating">
-                <option value="5">★★★★★ (5)</option>
-                <option value="4">★★★★☆ (4)</option>
-                <option value="3">★★★☆☆ (3)</option>
-                <option value="2">★★☆☆☆ (2)</option>
-                <option value="1">★☆☆☆☆ (1)</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="comment">コメント:</label>
-            <textarea id="comment" name="comment" rows="4" required placeholder="商品のレビューを入力してください..."></textarea>
-        </div>
-        
-        <button type="submit" class="btn">投稿する</button>
-    </form>
-</div>
-
 <!-- 脆弱性のヒント -->
 <div class="hint-box">
     <h4>💡 テストのヒント</h4>
     <ul>
-        <li><strong>XSS (Stored):</strong> コメント欄に <code>&lt;script&gt;alert('Stored XSS')&lt;/script&gt;</code> を入力してみてください</li>
-        <li><strong>HTMLインジェクション:</strong> <code>&lt;h1&gt;テスト&lt;/h1&gt;</code> や <code>&lt;img src=x onerror=alert('XSS')&gt;</code> も試せます</li>
+        <li><strong>IDOR (Insecure Direct Object Reference):</strong> URLの商品IDを変更してみてください</li>
+        <li>例: <code>/product/1</code> → <code>/product/2</code> → <code>/product/999</code></li>
+        <li>認可チェックなしで全商品の情報にアクセスできます</li>
     </ul>
 </div>
-
-{% else %}
-<div class="info-box" style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 1rem; margin: 2rem 0; border-radius: 5px;">
-    <h4>ℹ️ この商品はレビュー投稿できません</h4>
-    <p>レビュー投稿のテストは <a href="/product/1">ノートパソコン（商品ID: 1）</a> でお試しください。</p>
-</div>
-{% endif %}
 
 <p><a href="/products">← 商品一覧に戻る</a></p>
 {% endblock %}

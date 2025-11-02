@@ -25,9 +25,8 @@
         
         <div class="feature-card">
             <h4>💾 XSS (Stored) (A03:2021)</h4>
-            <p>レビュー機能で格納型XSSが可能</p>
-            <a href="/product/1" class="btn">試してみる</a>
-            <small style="display:block; margin-top:0.5rem; color:#666;">※ 商品ID: 1のみ</small>
+            <p>ゲストブック機能で格納型XSSが可能</p>
+            <a href="/guestbook" class="btn">試してみる</a>
         </div>
         
         <div class="feature-card">
@@ -39,7 +38,7 @@
         <div class="feature-card">
             <h4>🛡️ セキュリティヘッダー欠如 (A05:2021)</h4>
             <p>必要なセキュリティヘッダーが設定されていない</p>
-            <a href="/api/info" class="btn">API情報</a>
+            <a href="/security-headers" class="btn">詳細</a>
         </div>
     
         <div class="feature-card">
@@ -57,7 +56,11 @@
         <div class="feature-card">
             <h4>📦 Vulnerable Components (A06:2021)</h4>
             <p>既知の脆弱性を持つ古いライブラリを使用</p>
-            <a href="/api/info" class="btn">詳細</a>
+            <a href="/vulnerable-components" class="btn">詳細</a>
+            <div style="margin-top: 10px; font-size: 0.85em;">
+                <a href="/component-versions" style="color: #3498db;">バージョン情報API</a> | 
+                <a href="/static/downloads/requirements.txt" style="color: #3498db;">requirements.txt</a>
+            </div>
         </div>
 
         <div class="feature-card">
@@ -80,12 +83,6 @@
 
     
     </div>
-</div>
-
-<div class="info-box" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1.5rem; margin: 2rem 0;">
-    <h3 style="color: #856404; margin-bottom: 0.5rem;">📝 レビュー投稿について</h3>
-    <p>XSS (Stored) のテストは <strong><a href="/product/1" style="color: #007bff;">商品ID: 1（ノートパソコン）</a></strong> でのみ可能です。</p>
-    <p>他の商品ではレビューの閲覧のみ可能です。</p>
 </div>
 
 <div class="warning">

@@ -55,6 +55,16 @@ def init_database():
         )
     ''')
     
+    # ゲストブックテーブル作成（Stored XSS用）
+    cursor.execute('''
+        CREATE TABLE guestbook (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            comment TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # サンプル商品データ
     products = [
         ('ノートパソコン', '高性能な最新モデル', 89800, 'electronics'),
@@ -85,12 +95,25 @@ def init_database():
         reviews
     )
     
+    # サンプルゲストブックデータ
+    guestbook_entries = [
+        ('山田太郎', 'はじめまして！素敵なサイトですね。'),
+        ('佐藤花子', 'とても参考になりました。ありがとうございます！'),
+        ('田中一郎', 'また訪問します。'),
+    ]
+    
+    cursor.executemany(
+        'INSERT INTO guestbook (name, comment) VALUES (?, ?)',
+        guestbook_entries
+    )
+    
     conn.commit()
     conn.close()
     
     print('\n✅ データベースの初期化が完了しました')
     print('📊 商品数:', len(products))
     print('💬 レビュー数:', len(reviews))
+    print('📝 ゲストブック件数:', len(guestbook_entries))
 
 if __name__ == '__main__':
     init_database()

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerable Components - VulnApp</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .vulnerability-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .vulnerability-card h3 {
+            color: #e74c3c;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .severity-high {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .severity-medium {
+            background-color: #f39c12;
+            color: white;
+        }
+        .component-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .component-info strong {
+            color: #2c3e50;
+        }
+        .cve-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .cve-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .cve-list li:last-child {
+            border-bottom: none;
+        }
+        .cve-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .cve-link:hover {
+            text-decoration: underline;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-box h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .detection-methods {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Vulnerable Components (A06:2021)</h1>
+        <p class="description">
+            このページでは、VulnAppに意図的にインストールされている<strong>既知の脆弱性を含む古いバージョンのコンポーネント</strong>について説明します。
+        </p>
+
+        <div class="warning-box">
+            <h3>⚠️ 重要な警告</h3>
+            <p>
+                これらの脆弱なバージョンは<strong>教育・検証目的でのみ</strong>使用されています。
+                実際の本番環境では<strong>絶対に使用しないでください</strong>。
+            </p>
+        </div>
+
+        <!-- Flask -->
+        <div class="vulnerability-card">
+            <h3>
+                🐍 Flask 
+                <span class="severity-badge severity-medium">MEDIUM</span>
+            </h3>
+            <div class="component-info">
+                <p><strong>インストールバージョン:</strong> 1.1.2</p>
+                <p><strong>最新の安定版:</strong> 3.0.x</p>
+                <p><strong>リリース日:</strong> 2020年4月</p>
+            </div>
+            <h4>🔍 既知の脆弱性</h4>
+            <ul class="cve-list">
+                <li>
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-30861" target="_blank" class="cve-link">CVE-2023-30861</a>
+                    - Possible disclosure of permanent session cookie
+                    <br><small>セッションCookieの漏洩により、セッション固定攻撃のリスクが存在します。</small>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Werkzeug -->
+        <div class="vulnerability-card">
+            <h3>
+                🔧 Werkzeug 
+                <span class="severity-badge severity-high">HIGH</span>
+            </h3>
+            <div class="component-info">
+                <p><strong>インストールバージョン:</strong> 1.0.1</p>
+                <p><strong>最新の安定版:</strong> 3.0.x</p>
+                <p><strong>リリース日:</strong> 2020年3月</p>
+            </div>
+            <h4>🔍 既知の脆弱性</h4>
+            <ul class="cve-list">
+                <li>
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2022-29361" target="_blank" class="cve-link">CVE-2022-29361</a>
+                    - Path Traversal vulnerability
+                    <br><small>特定の条件下でパストラバーサル攻撃が可能です。</small>
+                </li>
+                <li>
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-25577" target="_blank" class="cve-link">CVE-2023-25577</a>
+                    - Debug mode password hash disclosure
+                    <br><small>デバッグモードでパスワードハッシュが漏洩する可能性があります。</small>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Jinja2 -->
+        <div class="vulnerability-card">
+            <h3>
+                📝 Jinja2 
+                <span class="severity-badge severity-medium">MEDIUM</span>
+            </h3>
+            <div class="component-info">
+                <p><strong>インストールバージョン:</strong> 2.11.3</p>
+                <p><strong>最新の安定版:</strong> 3.1.x</p>
+                <p><strong>リリース日:</strong> 2021年1月</p>
+            </div>
+            <h4>🔍 既知の脆弱性</h4>
+            <ul class="cve-list">
+                <li>
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2020-28493" target="_blank" class="cve-link">CVE-2020-28493</a>
+                    - Regular Expression Denial of Service (ReDoS)
+                    <br><small>特定の正規表現パターンによりDoS攻撃が可能です。</small>
+                </li>
+            </ul>
+        </div>
+
+        <!-- PyYAML -->
+        <div class="vulnerability-card">
+            <h3>
+                📄 PyYAML 
+                <span class="severity-badge severity-high">HIGH</span>
+            </h3>
+            <div class="component-info">
+                <p><strong>インストールバージョン:</strong> 5.3.1</p>
+                <p><strong>最新の安定版:</strong> 6.0.x</p>
+                <p><strong>リリース日:</strong> 2020年3月</p>
+            </div>
+            <h4>🔍 既知の脆弱性</h4>
+            <ul class="cve-list">
+                <li>
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2020-14343" target="_blank" class="cve-link">CVE-2020-14343</a>
+                    - Arbitrary Code Execution
+                    <br><small>unsafe yaml.load()を使用した場合、任意のPythonコードが実行可能です。</small>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 検出方法 -->
+        <h2>🔎 スキャナーによる検出方法</h2>
+        <div class="detection-methods">
+            <h4>1. HTTPレスポンスヘッダー分析</h4>
+            <p>Werkzeugのバージョン情報が露出しています：</p>
+            <div class="code-block">Server: Werkzeug/1.0.1 Python/3.12.x</div>
+
+            <h4>2. エラーページ分析</h4>
+            <p>デバッグモードのエラーページからライブラリバージョンを特定できます。</p>
+
+            <h4>3. 既知の脆弱性データベース照合</h4>
+            <ul>
+                <li>National Vulnerability Database (NVD)</li>
+                <li>CVE (Common Vulnerabilities and Exposures)</li>
+                <li>OWASP Dependency-Check</li>
+                <li>Snyk Vulnerability Database</li>
+            </ul>
+        </div>
+
+        <!-- Requirements.txt -->
+        <h2>📋 requirements.txt</h2>
+        <div class="code-block"># 脆弱なコンポーネント（診断用・意図的に古いバージョン）
+Flask==1.1.2
+Werkzeug==1.0.1
+Jinja2==2.11.3
+PyYAML==5.3.1
+
+# 依存関係
+MarkupSafe==2.0.1
+itsdangerous==1.1.0
+click>=7.0</div>
+
+        <div class="warning-box">
+            <h3>🛡️ セキュリティのベストプラクティス</h3>
+            <ul>
+                <li>常に最新の安定版を使用する</li>
+                <li>定期的に依存関係を更新する（pip list --outdated）</li>
+                <li>セキュリティアドバイザリを監視する</li>
+                <li>自動化ツール（Dependabot、Snyk等）を活用する</li>
+                <li>脆弱性スキャンを定期的に実行する</li>
+            </ul>
+        </div>
+
+        <a href="/" class="back-link">← トップページに戻る</a>
+    </div>
+</body>
+</html>

@@ -3,7 +3,6 @@ import sqlite3
 import os
 import subprocess
 import platform
-import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 import time 
@@ -371,71 +370,6 @@ def file_view():
     
     return render_template('file_view.html', filename=filename, content=content, error=error)
 
-@app.route('/vulnerable-components')
-def vulnerable_components():
-    """Vulnerable Components information page
-    
-    Vulnerability 8: Vulnerable Components (A06:2021)
-    Displays information about intentionally vulnerable packages
-    """
-    return render_template('vulnerable_components.html')
-@app.route('/security-headers')
-def security_headers():
-    """Security Headers information page
-    
-    Vulnerability 5: Missing Security Headers
-    Displays information about missing security headers
-    """
-    return render_template('security_headers.html')
-
-
-@app.route('/component-versions')
-def component_versions():
-    """Vulnerable Components version disclosure endpoint
-    
-    Intentionally exposes all component versions for security scanner detection
-    """
-    import flask
-    import jinja2
-    import yaml
-    import werkzeug
-    
-    return jsonify({
-        'framework': {
-            'Flask': flask.__version__,
-            'Werkzeug': werkzeug.__version__
-        },
-        'template_engine': {
-            'Jinja2': jinja2.__version__
-        },
-        'libraries': {
-            'PyYAML': yaml.__version__
-        },
-        'python': {
-            'version': sys.version
-        },
-        'warning': 'These versions contain known security vulnerabilities. DO NOT use in production!'
-    })
-
-@app.route('/trigger-version-error')
-def trigger_version_error():
-    """Trigger error page with version information
-    
-    Deliberately causes an exception that exposes component versions in stack trace
-    """
-    import flask
-    import jinja2
-    import yaml
-    
-    # Intentionally raise exception with version info
-    raise Exception(
-        f"Component Versions - "
-        f"Flask {flask.__version__}, "
-        f"Jinja2 {jinja2.__version__}, "
-        f"PyYAML {yaml.__version__}"
-    )
-
-
 @app.route('/api/info')
 def api_info():
     """API information endpoint (debug info leakage example)
@@ -705,29 +639,5 @@ def clear_guestbook():
     return redirect(url_for('guestbook'))
 
 
-
-# Add custom headers to expose component versions (Vulnerability: Information Disclosure)
-@app.after_request
-def add_version_headers(response):
-    """Add custom headers exposing component versions
-    
-    Vulnerability: Information Disclosure
-    Intentionally exposes all component versions in HTTP headers for scanner detection
-    """
-    import flask
-    import jinja2
-    import yaml
-    import werkzeug
-    
-    # Add custom headers with version information
-    response.headers['X-Powered-By'] = f'Flask/{flask.__version__}'
-    response.headers['X-Template-Engine'] = f'Jinja2/{jinja2.__version__}'
-    response.headers['X-YAML-Parser'] = f'PyYAML/{yaml.__version__}'
-    response.headers['X-WSGI-Server'] = f'Werkzeug/{werkzeug.__version__}'
-    response.headers['X-Component-Versions'] = f'Flask/{flask.__version__}, Jinja2/{jinja2.__version__}, PyYAML/{yaml.__version__}'
-    
-    return response
-
-if __name__ == "__main__":
     # 🚨 脆弱性5: セキュリティヘッダーの欠如
     app.run(host='0.0.0.0', port=80, debug=True)
