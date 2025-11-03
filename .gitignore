@@ -25,23 +25,21 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.pyc
+*.pyo
+*.pyd
 
-# Database
+# Database files
 *.db
 *.sqlite
 *.sqlite3
 *.db-shm
 *.db-wal
-vulnapp.db
-guestbook.db
 
 # Logs
 *.log
 app.log*
 flask.log
-gunicorn_access.log*
-gunicorn_error.log*
-monitor_log*.txt
 nohup.out
 
 # Backup files
@@ -51,39 +49,35 @@ nohup.out
 *.bak
 *~
 app.py.backup*
-app.py.before_*
-app.py.broken
 app.py.port80
 app.py.temp
 README.md.backup*
 .gitignore.backup*
 
-# Temporary Python files
-*.pyc
-*.pyo
-*.pyd
+# Temporary files
+*.tmp
+tmp/
+temp/
+.cache/
 
-# Test results & monitoring outputs
-scan_results/
-no_errors.txt
-monitor_output/
-
-# Uploads (keep structure but ignore uploaded files)
+# Uploads (keep structure but ignore uploaded files except samples)
 uploads/*
 !uploads/.gitkeep
 !uploads/sample*.txt
 !uploads/confidential.txt
-*.tmp
 
 # IDE & Editor
 .vscode/
 .idea/
 *.swp
 *.swo
-.DS_Store
-Thumbs.db
 *.sublime-project
 *.sublime-workspace
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Environment variables
 .env
@@ -96,39 +90,19 @@ Thumbs.db
 *.crt
 *.cert
 
-# Scripts outputs (keep scripts, ignore outputs)
-monitor_log.txt
-monitor_log_gunicorn.txt
+# Working/Testing scripts and documents (exclude from repo)
+*.sh
+*.txt
+!requirements.txt
+*.md
+!README.md
 
-# Temporary files & directories
-tmp/
-temp/
-*.tmp
-.cache/
-
-# OS specific
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Documentation temporary files (keep main docs)
-QUICKSTART_ZAP_SCAN.txt
-README_vuln_components.txt
-SCAN_MONITORING.md
-
-# Test & Analysis scripts (optional - uncomment to include in repo)
-# analyze_scan.sh
-# check_environment.sh
-# emergency_check.sh
-# monitor_guestbook.sh
-# monitor_http_requests.sh
-# monitor_zap_scan.sh
-# prepare_scan.sh
-# start_monitoring.sh
-
-# Source directory (if not needed)
+# Source directory
 source/
 
-# Tests directory output
+# Test results
+scan_results/
 tests/__pycache__/
 tests/*.pyc
+monitor_output/
+no_errors.txt
