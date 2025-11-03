@@ -391,30 +391,21 @@ def security_headers():
 
 @app.route('/component-versions')
 def component_versions():
-    """Vulnerable Components version disclosure endpoint
+    """jQuery version disclosure endpoint
     
-    Intentionally exposes all component versions for security scanner detection
+    Intentionally exposes jQuery version for security scanner detection
     """
-    import flask
-    import jinja2
-    import yaml
-    import werkzeug
-    
     return jsonify({
-        'framework': {
-            'Flask': flask.__version__,
-            'Werkzeug': werkzeug.__version__
+        'library': {
+            'jQuery': '2.2.4'  # CVE-2019-11358, CVE-2015-9251, CVE-2020-11022, CVE-2020-11023
         },
-        'template_engine': {
-            'Jinja2': jinja2.__version__
-        },
-        'libraries': {
-            'PyYAML': yaml.__version__
-        },
-        'python': {
-            'version': sys.version
-        },
-        'warning': 'These versions contain known security vulnerabilities. DO NOT use in production!'
+        'cves': [
+            'CVE-2019-11358',  # Prototype Pollution
+            'CVE-2015-9251',   # XSS via location.hash
+            'CVE-2020-11022',  # XSS via htmlPrefilter
+            'CVE-2020-11023'   # XSS via htmlPrefilter
+        ],
+        'warning': 'This jQuery version contains known security vulnerabilities. DO NOT use in production!'
     })
 
 @app.route('/trigger-version-error')
@@ -709,22 +700,14 @@ def clear_guestbook():
 # Add custom headers to expose component versions (Vulnerability: Information Disclosure)
 @app.after_request
 def add_version_headers(response):
-    """Add custom headers exposing component versions
+    """Add custom header exposing jQuery version
     
     Vulnerability: Information Disclosure
-    Intentionally exposes all component versions in HTTP headers for scanner detection
+    Intentionally exposes jQuery version in HTTP headers for scanner detection
     """
-    import flask
-    import jinja2
-    import yaml
-    import werkzeug
-    
-    # Add custom headers with version information
-    response.headers['X-Powered-By'] = f'Flask/{flask.__version__}'
-    response.headers['X-Template-Engine'] = f'Jinja2/{jinja2.__version__}'
-    response.headers['X-YAML-Parser'] = f'PyYAML/{yaml.__version__}'
-    response.headers['X-WSGI-Server'] = f'Werkzeug/{werkzeug.__version__}'
-    response.headers['X-Component-Versions'] = f'Flask/{flask.__version__}, Jinja2/{jinja2.__version__}, PyYAML/{yaml.__version__}'
+    # Add custom header with jQuery version
+    response.headers['X-Powered-By'] = 'jQuery/2.2.4'
+    response.headers['X-jQuery-Version'] = '2.2.4'  # CVE-2019-11358, CVE-2015-9251, CVE-2020-11022, CVE-2020-11023
     
     return response
 

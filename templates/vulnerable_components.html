@@ -1,253 +1,186 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulnerable Components - VulnApp</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <style>
-        .vulnerability-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .vulnerability-card h3 {
-            color: #e74c3c;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .severity-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-        .severity-high {
-            background-color: #e74c3c;
-            color: white;
-        }
-        .severity-medium {
-            background-color: #f39c12;
-            color: white;
-        }
-        .component-info {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;
-        }
-        .component-info strong {
-            color: #2c3e50;
-        }
-        .cve-list {
-            list-style: none;
-            padding-left: 0;
-        }
-        .cve-list li {
-            padding: 5px 0;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        .cve-list li:last-child {
-            border-bottom: none;
-        }
-        .cve-link {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .cve-link:hover {
-            text-decoration: underline;
-        }
-        .warning-box {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .warning-box h3 {
-            color: #856404;
-            margin-top: 0;
-        }
-        .detection-methods {
-            background: #e8f4f8;
-            padding: 15px;
-            border-left: 4px solid #3498db;
-            margin: 15px 0;
-        }
-        .code-block {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-family: monospace;
-            margin: 10px 0;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #3498db;
-            text-decoration: none;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>📦 Vulnerable Components (A06:2021)</h1>
-        <p class="description">
-            このページでは、VulnAppに意図的にインストールされている<strong>既知の脆弱性を含む古いバージョンのコンポーネント</strong>について説明します。
-        </p>
+{% extends "base.html" %}
 
-        <div class="warning-box">
-            <h3>⚠️ 重要な警告</h3>
-            <p>
-                これらの脆弱なバージョンは<strong>教育・検証目的でのみ</strong>使用されています。
-                実際の本番環境では<strong>絶対に使用しないでください</strong>。
-            </p>
-        </div>
+{% block title %}Vulnerable Components - jQuery 2.2.4{% endblock %}
 
-        <!-- Flask -->
-        <div class="vulnerability-card">
-            <h3>
-                🐍 Flask 
-                <span class="severity-badge severity-medium">MEDIUM</span>
-            </h3>
-            <div class="component-info">
-                <p><strong>インストールバージョン:</strong> 1.1.2</p>
-                <p><strong>最新の安定版:</strong> 3.0.x</p>
-                <p><strong>リリース日:</strong> 2020年4月</p>
-            </div>
-            <h4>🔍 既知の脆弱性</h4>
-            <ul class="cve-list">
-                <li>
-                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-30861" target="_blank" class="cve-link">CVE-2023-30861</a>
-                    - Possible disclosure of permanent session cookie
-                    <br><small>セッションCookieの漏洩により、セッション固定攻撃のリスクが存在します。</small>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Werkzeug -->
-        <div class="vulnerability-card">
-            <h3>
-                🔧 Werkzeug 
-                <span class="severity-badge severity-high">HIGH</span>
-            </h3>
-            <div class="component-info">
-                <p><strong>インストールバージョン:</strong> 1.0.1</p>
-                <p><strong>最新の安定版:</strong> 3.0.x</p>
-                <p><strong>リリース日:</strong> 2020年3月</p>
-            </div>
-            <h4>🔍 既知の脆弱性</h4>
-            <ul class="cve-list">
-                <li>
-                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2022-29361" target="_blank" class="cve-link">CVE-2022-29361</a>
-                    - Path Traversal vulnerability
-                    <br><small>特定の条件下でパストラバーサル攻撃が可能です。</small>
-                </li>
-                <li>
-                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-25577" target="_blank" class="cve-link">CVE-2023-25577</a>
-                    - Debug mode password hash disclosure
-                    <br><small>デバッグモードでパスワードハッシュが漏洩する可能性があります。</small>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Jinja2 -->
-        <div class="vulnerability-card">
-            <h3>
-                📝 Jinja2 
-                <span class="severity-badge severity-medium">MEDIUM</span>
-            </h3>
-            <div class="component-info">
-                <p><strong>インストールバージョン:</strong> 2.11.3</p>
-                <p><strong>最新の安定版:</strong> 3.1.x</p>
-                <p><strong>リリース日:</strong> 2021年1月</p>
-            </div>
-            <h4>🔍 既知の脆弱性</h4>
-            <ul class="cve-list">
-                <li>
-                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2020-28493" target="_blank" class="cve-link">CVE-2020-28493</a>
-                    - Regular Expression Denial of Service (ReDoS)
-                    <br><small>特定の正規表現パターンによりDoS攻撃が可能です。</small>
-                </li>
-            </ul>
-        </div>
-
-        <!-- PyYAML -->
-        <div class="vulnerability-card">
-            <h3>
-                📄 PyYAML 
-                <span class="severity-badge severity-high">HIGH</span>
-            </h3>
-            <div class="component-info">
-                <p><strong>インストールバージョン:</strong> 5.3.1</p>
-                <p><strong>最新の安定版:</strong> 6.0.x</p>
-                <p><strong>リリース日:</strong> 2020年3月</p>
-            </div>
-            <h4>🔍 既知の脆弱性</h4>
-            <ul class="cve-list">
-                <li>
-                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2020-14343" target="_blank" class="cve-link">CVE-2020-14343</a>
-                    - Arbitrary Code Execution
-                    <br><small>unsafe yaml.load()を使用した場合、任意のPythonコードが実行可能です。</small>
-                </li>
-            </ul>
-        </div>
-
-        <!-- 検出方法 -->
-        <h2>🔎 スキャナーによる検出方法</h2>
-        <div class="detection-methods">
-            <h4>1. HTTPレスポンスヘッダー分析</h4>
-            <p>Werkzeugのバージョン情報が露出しています：</p>
-            <div class="code-block">Server: Werkzeug/1.0.1 Python/3.12.x</div>
-
-            <h4>2. エラーページ分析</h4>
-            <p>デバッグモードのエラーページからライブラリバージョンを特定できます。</p>
-
-            <h4>3. 既知の脆弱性データベース照合</h4>
-            <ul>
-                <li>National Vulnerability Database (NVD)</li>
-                <li>CVE (Common Vulnerabilities and Exposures)</li>
-                <li>OWASP Dependency-Check</li>
-                <li>Snyk Vulnerability Database</li>
-            </ul>
-        </div>
-
-        <!-- Requirements.txt -->
-        <h2>📋 requirements.txt</h2>
-        <div class="code-block"># 脆弱なコンポーネント（診断用・意図的に古いバージョン）
-Flask==1.1.2
-Werkzeug==1.0.1
-Jinja2==2.11.3
-PyYAML==5.3.1
-
-# 依存関係
-MarkupSafe==2.0.1
-itsdangerous==1.1.0
-click>=7.0</div>
-
-        <div class="warning-box">
-            <h3>🛡️ セキュリティのベストプラクティス</h3>
-            <ul>
-                <li>常に最新の安定版を使用する</li>
-                <li>定期的に依存関係を更新する（pip list --outdated）</li>
-                <li>セキュリティアドバイザリを監視する</li>
-                <li>自動化ツール（Dependabot、Snyk等）を活用する</li>
-                <li>脆弱性スキャンを定期的に実行する</li>
-            </ul>
-        </div>
-
-        <a href="/" class="back-link">← トップページに戻る</a>
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #e74c3c; margin-bottom: 30px;">📦 Vulnerable Components (A06:2021)</h2>
+    
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 30px;">
+        <h3 style="margin-top: 0; color: #856404;">⚠️ 警告</h3>
+        <p style="margin-bottom: 0;">このページでは、既知の脆弱性を持つ<strong>jQuery 2.2.4</strong>を意図的に使用しています。</p>
     </div>
-</body>
-</html>
+
+    <!-- jQuery概要 -->
+    <div style="background: white; border: 1px solid #ddd; border-radius: 5px; padding: 25px; margin-bottom: 30px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">🔍 検出されるコンポーネント</h3>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: #495057;">jQuery 2.2.4</h4>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8px; font-weight: bold; width: 200px;">ライブラリ名:</td>
+                    <td style="padding: 8px;">jQuery</td>
+                </tr>
+                <tr style="background: #fff;">
+                    <td style="padding: 8px; font-weight: bold;">使用バージョン:</td>
+                    <td style="padding: 8px; color: #e74c3c; font-weight: bold;">2.2.4 (脆弱)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-weight: bold;">最新バージョン:</td>
+                    <td style="padding: 8px; color: #27ae60;">3.7.1</td>
+                </tr>
+                <tr style="background: #fff;">
+                    <td style="padding: 8px; font-weight: bold;">リリース日:</td>
+                    <td style="padding: 8px;">2016年5月20日</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-weight: bold;">サポート状態:</td>
+                    <td style="padding: 8px; color: #e74c3c;">❌ サポート終了</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h4 style="color: #e74c3c;">🚨 既知の脆弱性（CVE）</h4>
+            
+            <!-- CVE-2019-11358 -->
+            <div style="border: 1px solid #e74c3c; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                <h5 style="margin-top: 0; color: #c0392b;">CVE-2019-11358 - Prototype Pollution</h5>
+                <p><strong>影響バージョン:</strong> jQuery < 3.4.0</p>
+                <p><strong>CVSS Score:</strong> 6.1 (Medium)</p>
+                <p><strong>説明:</strong> jQueryの<code>$.extend(true, {}, ...)</code>メソッドにおいて、
+                オブジェクトのプロトタイプを汚染できる脆弱性。攻撃者がオブジェクトのプロトタイプに
+                プロパティを追加することで、予期しない動作を引き起こす可能性があります。</p>
+                <p><strong>修正バージョン:</strong> 3.4.0以降</p>
+                <p><strong>参考:</strong> 
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2019-11358" target="_blank" style="color: #3498db;">NVD</a> | 
+                    <a href="https://blog.jquery.com/2019/04/10/jquery-3-4-0-released/" target="_blank" style="color: #3498db;">jQuery Release Notes</a>
+                </p>
+            </div>
+
+            <!-- CVE-2015-9251 -->
+            <div style="border: 1px solid #e74c3c; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                <h5 style="margin-top: 0; color: #c0392b;">CVE-2015-9251 - Cross-Site Scripting (XSS)</h5>
+                <p><strong>影響バージョン:</strong> jQuery 1.12.4 < 3.0.0</p>
+                <p><strong>CVSS Score:</strong> 6.1 (Medium)</p>
+                <p><strong>説明:</strong> <code>location.hash</code>の処理において、クロスサイトスクリプティング（XSS）
+                攻撃が可能な脆弱性。攻撃者がURLフラグメントを悪用して任意のJavaScriptコードを実行できます。</p>
+                <p><strong>修正バージョン:</strong> 3.0.0以降</p>
+                <p><strong>参考:</strong> 
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2015-9251" target="_blank" style="color: #3498db;">NVD</a>
+                </p>
+            </div>
+
+            <!-- CVE-2020-11022 & CVE-2020-11023 -->
+            <div style="border: 1px solid #e74c3c; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                <h5 style="margin-top: 0; color: #c0392b;">CVE-2020-11022 & CVE-2020-11023 - XSS (htmlPrefilter)</h5>
+                <p><strong>影響バージョン:</strong> jQuery 1.2.0 < 3.5.0</p>
+                <p><strong>CVSS Score:</strong> 6.1 (Medium)</p>
+                <p><strong>説明:</strong> <code>.html()</code>、<code>.append()</code>等のメソッドで使用される
+                htmlPrefilter関数において、特定のHTML文字列を処理する際にXSS攻撃が可能な脆弱性。
+                <code>&lt;option&gt;&lt;style&gt;&lt;/style&gt;</code>等の特殊なタグ構造を悪用できます。</p>
+                <p><strong>修正バージョン:</strong> 3.5.0以降</p>
+                <p><strong>参考:</strong> 
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2020-11022" target="_blank" style="color: #3498db;">CVE-2020-11022</a> | 
+                    <a href="https://nvd.nist.gov/vuln/detail/CVE-2020-11023" target="_blank" style="color: #3498db;">CVE-2020-11023</a> | 
+                    <a href="https://blog.jquery.com/2020/04/10/jquery-3-5-0-released/" target="_blank" style="color: #3498db;">jQuery 3.5.0 Release</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修正方法 -->
+    <div style="background: white; border: 1px solid #ddd; border-radius: 5px; padding: 25px; margin-bottom: 30px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">🔧 修正方法</h3>
+        
+        <h4 style="color: #495057;">1. jQueryのアップデート（推奨）</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;"><code># 現在のバージョンを削除
+rm static/js/jquery-2.2.4.min.js
+
+# 最新版をダウンロード
+wget https://code.jquery.com/jquery-3.7.1.min.js -O static/js/jquery-3.7.1.min.js
+
+# HTMLテンプレート内の参照を更新
+&lt;script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"&gt;&lt;/script&gt;</code></pre>
+
+        <h4 style="color: #495057; margin-top: 25px;">2. CDN経由での使用</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>&lt;!-- Google CDN --&gt;
+&lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- jQuery CDN --&gt;
+&lt;script src="https://code.jquery.com/jquery-3.7.1.min.js" 
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" 
+        crossorigin="anonymous"&gt;&lt;/script&gt;</code></pre>
+
+        <h4 style="color: #495057; margin-top: 25px;">3. Subresource Integrity (SRI) の使用</h4>
+        <p>CDN経由で使用する場合は、SRIハッシュを必ず追加してください：</p>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>&lt;script src="https://code.jquery.com/jquery-3.7.1.min.js" 
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" 
+        crossorigin="anonymous"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <!-- バージョン情報API -->
+    <div style="background: white; border: 1px solid #ddd; border-radius: 5px; padding: 25px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">🔗 関連リソース</h3>
+        
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="/component-versions" style="background: #3498db; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                📊 バージョン情報API
+            </a>
+            <a href="https://jquery.com/download/" target="_blank" style="background: #27ae60; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                ⬇️ jQuery最新版ダウンロード
+            </a>
+            <a href="https://blog.jquery.com/" target="_blank" style="background: #9b59b6; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                📰 jQuery公式ブログ
+            </a>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 5px;">
+            <p style="margin: 0; font-weight: bold; color: #2e7d32;">💡 ヒント</p>
+            <p style="margin: 10px 0 0 0;">ブラウザのコンソールで<code>$.fn.jquery</code>を実行すると、現在のjQueryバージョンを確認できます。</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="/" style="color: #3498db; text-decoration: none; font-size: 16px;">← ホームに戻る</a>
+    </div>
+</div>
+
+<style>
+code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+
+pre code {
+    background: transparent;
+    padding: 0;
+}
+
+a {
+    transition: opacity 0.2s;
+}
+
+a:hover {
+    opacity: 0.8;
+}
+
+table {
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    div[style*="flex"] {
+        flex-direction: column;
+    }
+    
+    table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

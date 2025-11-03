@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}脆弱性診断テストアプリ{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- 🚨 脆弱性8: Vulnerable Components (jQuery 2.2.4) -->
+    <!-- CVE-2019-11358: jQuery < 3.4.0 Prototype Pollution -->
+    <script src="{{ url_for('static', filename='js/jquery-2.2.4.min.js') }}"></script>
+    <script>
+        // バージョン情報を明示的に露出
+        console.log('jQuery version: ' + $.fn.jquery);
+        console.log('Warning: This jQuery version has known vulnerabilities (CVE-2019-11358)');
+    </script>
+    
     <!-- 🚨 脆弱性5: セキュリティヘッダーの欠如 -->
     <!-- X-Frame-Options, CSP, X-Content-Type-Options などが設定されていない -->
 </head>
@@ -30,6 +40,7 @@
         <div class="container">
             <p>&copy; 2024 VulnApp - 脆弱性診断用テストアプリケーション</p>
             <p><small>⚠️ このアプリケーションには意図的に脆弱性が含まれています</small></p>
+            <p><small>📚 Powered by jQuery v2.2.4 (CVE-2019-11358)</small></p>
         </div>
     </footer>
 </body>
