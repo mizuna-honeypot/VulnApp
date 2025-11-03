@@ -1,19 +1,11 @@
-# 脆弱なコンポーネント（診断用・意図的に古いバージョン）
-# これらのパッケージには既知の脆弱性が含まれています
+# Flask Web Framework
+Flask==3.1.0
 
-# Flask 1.1.2 - CVE-2023-30861 (Possible disclosure of permanent session cookie)
-Flask==1.1.2
-
-# Werkzeug 1.0.1 - CVE-2022-29361, CVE-2023-25577
-Werkzeug==1.0.1
-
-# Jinja2 2.11.3 - CVE-2020-28493 (ReDoS)
-Jinja2==2.11.3
-
-# PyYAML 5.3.1 - CVE-2020-14343 (Arbitrary Code Execution)
-PyYAML==5.3.1
-
-# 依存関係
+# Dependencies
 MarkupSafe==2.0.1
 itsdangerous==1.1.0
 click>=7.0
+
+# Note: Werkzeug and Jinja2 will be automatically installed as Flask dependencies
+# jQuery 2.2.4 is included as a static file (static/js/jquery-2.2.4.min.js)
+# and intentionally contains known vulnerabilities for security testing purposes
