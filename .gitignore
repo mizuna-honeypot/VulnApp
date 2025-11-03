@@ -33,8 +33,7 @@ MANIFEST
 *.db-shm
 *.db-wal
 vulnapp.db
-vulnapp.db-shm
-vulnapp.db-wal
+guestbook.db
 
 # Logs
 *.log
@@ -49,28 +48,42 @@ nohup.out
 *.backup
 *.backup_*
 *.old
+*.bak
+*~
 app.py.backup*
 app.py.before_*
 app.py.broken
-*.bak
-*~
+app.py.port80
+app.py.temp
+README.md.backup*
+.gitignore.backup*
 
-# Test results
+# Temporary Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Test results & monitoring outputs
 scan_results/
 no_errors.txt
+monitor_output/
 
-# Uploads
+# Uploads (keep structure but ignore uploaded files)
 uploads/*
 !uploads/.gitkeep
+!uploads/sample*.txt
+!uploads/confidential.txt
 *.tmp
 
-# IDE
+# IDE & Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 .DS_Store
 Thumbs.db
+*.sublime-project
+*.sublime-workspace
 
 # Environment variables
 .env
@@ -83,11 +96,39 @@ Thumbs.db
 *.crt
 *.cert
 
-# Scripts (keep monitoring scripts but ignore outputs)
+# Scripts outputs (keep scripts, ignore outputs)
 monitor_log.txt
 monitor_log_gunicorn.txt
 
-# Temporary files
+# Temporary files & directories
 tmp/
 temp/
 *.tmp
+.cache/
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Documentation temporary files (keep main docs)
+QUICKSTART_ZAP_SCAN.txt
+README_vuln_components.txt
+SCAN_MONITORING.md
+
+# Test & Analysis scripts (optional - uncomment to include in repo)
+# analyze_scan.sh
+# check_environment.sh
+# emergency_check.sh
+# monitor_guestbook.sh
+# monitor_http_requests.sh
+# monitor_zap_scan.sh
+# prepare_scan.sh
+# start_monitoring.sh
+
+# Source directory (if not needed)
+source/
+
+# Tests directory output
+tests/__pycache__/
+tests/*.pyc
