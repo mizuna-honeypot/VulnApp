@@ -1,11 +1,8 @@
 # Flask Web Framework
 Flask==3.1.0
 
-# Dependencies
-MarkupSafe==2.0.1
-itsdangerous==1.1.0
-click>=7.0
-
-# Note: Werkzeug and Jinja2 will be automatically installed as Flask dependencies
+# Note: All dependencies (Werkzeug, Jinja2, itsdangerous, click, MarkupSafe)
+# are automatically installed by Flask with compatible versions
+#
 # jQuery 2.2.4 is included as a static file (static/js/jquery-2.2.4.min.js)
 # and intentionally contains known vulnerabilities for security testing purposes
