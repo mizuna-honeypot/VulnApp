@@ -75,7 +75,7 @@ Guestbook機能にStored XSSを実装。特徴：
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/your-username/VulnApp.git
+git clone https://github.com/mizuna-honeypot/VulnApp.git
 cd VulnApp
 
 # 2. 仮想環境を作成・有効化
@@ -91,6 +91,7 @@ python3 init_db.py
 # 5. アプリケーションを起動
 python3 app.py
 ```
+権限が問題で起動しない場合は、「sudo /フルパス/VulnApp/app.py」にて実行
 
 ### アクセスURL
 
