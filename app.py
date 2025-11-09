@@ -652,7 +652,7 @@ def guestbook():
     # GET: すべてのコメントを表示
     try:
         entries = conn.execute(
-            "SELECT id, name, comment, created_at FROM guestbook ORDER BY id DESC LIMIT 50"
+            "SELECT id, name, comment, created_at FROM guestbook ORDER BY id DESC"
         ).fetchall()
     except Exception as e:
         print(f"Error fetching guestbook entries: {e}")
