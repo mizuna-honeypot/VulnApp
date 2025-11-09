@@ -622,15 +622,15 @@ def clickjacking_attack():
 
 
 # ==========================================
-# Stored XSS Vulnerability: Guestbook
-# ==========================================
-
 @app.route('/guestbook', methods=['GET', 'POST'])
 def guestbook():
-    """ゲストブック - Stored XSS Vulnerable
+    """ゲストブック - Stored XSS Vulnerable with Pagination
     
     GETとPOSTを同じエンドポイントで処理することで、
     スキャナーがStored XSSを検出しやすくする
+    
+    Pagination: ?page=1, ?page=2, ... でページ送り
+    各ページ50件表示（スキャナーは全ページをクロール可能）
     """
     conn = get_db_connection()
     
@@ -649,18 +649,37 @@ def guestbook():
         except Exception as e:
             print(f"Error saving guestbook entry: {e}")
     
-    # GET: すべてのコメントを表示
+    # GET: ページネーション付きでコメントを表示
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    offset = (page - 1) * per_page
+    
     try:
+        # 総件数を取得
+        total_count = conn.execute("SELECT COUNT(*) FROM guestbook").fetchone()[0]
+        
+        # 現在ページのエントリを取得
         entries = conn.execute(
-            "SELECT id, name, comment, created_at FROM guestbook ORDER BY id DESC"
+            "SELECT id, name, comment, created_at FROM guestbook ORDER BY id DESC LIMIT ? OFFSET ?",
+            (per_page, offset)
         ).fetchall()
+        
+        # ページ数を計算
+        total_pages = (total_count + per_page - 1) // per_page
+        
     except Exception as e:
         print(f"Error fetching guestbook entries: {e}")
         entries = []
+        total_count = 0
+        total_pages = 0
     finally:
         conn.close()
     
-    return render_template('guestbook.html', entries=entries)
+    return render_template('guestbook.html', 
+                         entries=entries,
+                         page=page,
+                         total_pages=total_pages,
+                         total_count=total_count)
 
 
 @app.route('/guestbook/clear', methods=['POST'])
