@@ -1,141 +1,9 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Headers 欠如 - VulnApp</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <style>
-        .header-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .header-card h3 {
-            color: #e74c3c;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .severity-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-        .severity-high {
-            background-color: #e74c3c;
-            color: white;
-        }
-        .severity-medium {
-            background-color: #f39c12;
-            color: white;
-        }
-        .header-info {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;
-        }
-        .header-info strong {
-            color: #2c3e50;
-        }
-        .risk-list {
-            list-style: none;
-            padding-left: 0;
-        }
-        .risk-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        .risk-list li:last-child {
-            border-bottom: none;
-        }
-        .risk-list li::before {
-            content: "⚠️ ";
-            margin-right: 8px;
-        }
-        .warning-box {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .warning-box h3 {
-            color: #856404;
-            margin-top: 0;
-        }
-        .success-box {
-            background-color: #d4edda;
-            border: 2px solid #28a745;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .success-box h3 {
-            color: #155724;
-            margin-top: 0;
-        }
-        .code-block {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-family: monospace;
-            margin: 10px 0;
-            font-size: 0.9em;
-        }
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        .comparison-table th,
-        .comparison-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .comparison-table th {
-            background-color: #3498db;
-            color: white;
-        }
-        .comparison-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .status-missing {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-        .status-present {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #3498db;
-            text-decoration: none;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .test-section {
-            background: #e8f4f8;
-            padding: 15px;
-            border-left: 4px solid #3498db;
-            margin: 15px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
+
+{% block title %}Security Headers 欠如 - VulnApp{% endblock %}
+
+{% block content %}
+<div class="container">
         <h1>🛡️ セキュリティヘッダー欠如 (A05:2021)</h1>
         <p class="description">
             このページでは、VulnAppに意図的に<strong>設定していないセキュリティヘッダー</strong>について説明します。
@@ -412,5 +280,133 @@ def set_security_headers(response):
 
         <a href="/" class="back-link">← トップページに戻る</a>
     </div>
-</body>
-</html>
+
+<style>
+.header-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-card h3 {
+            color: #e74c3c;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .severity-high {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .severity-medium {
+            background-color: #f39c12;
+            color: white;
+        }
+        .header-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .header-info strong {
+            color: #2c3e50;
+        }
+        .risk-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .risk-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .risk-list li:last-child {
+            border-bottom: none;
+        }
+        .risk-list li::before {
+            content: "⚠️ ";
+            margin-right: 8px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-box h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .success-box {
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success-box h3 {
+            color: #155724;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #3498db;
+            color: white;
+        }
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-missing {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .status-present {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .test-section {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+        }
+</style>
+{% endblock %}
