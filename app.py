@@ -472,6 +472,84 @@ def login_page():
     return render_template('login.html', success=success, username=username)
 
 
+
+@app.route('/uploads/')
+@app.route('/uploads')
+def list_uploads():
+    """Uploadsディレクトリの一覧表示
+    
+    🚨 脆弱性: Directory Listing (A01:2021)
+    """
+    upload_dir = os.path.join(os.getcwd(), 'uploads')
+    
+    try:
+        files = os.listdir(upload_dir)
+        files.sort()
+        
+        # HTMLでディレクトリ一覧を表示
+        html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Index of /uploads/</title>
+            <style>
+                body { font-family: monospace; margin: 20px; }
+                h1 { font-size: 18px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                a { color: blue; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+            </style>
+        </head>
+        <body>
+            <h1>Index of /uploads/</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Size</th>
+                        <th>Last Modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="/">[Parent Directory]</a></td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+        """
+        
+        for file in files:
+            file_path = os.path.join(upload_dir, file)
+            if os.path.isfile(file_path):
+                size = os.path.getsize(file_path)
+                mtime = os.path.getmtime(file_path)
+                from datetime import datetime
+                mtime_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+                
+                html += f"""
+                    <tr>
+                        <td><a href="/uploads/{file}">{file}</a></td>
+                        <td>{size} bytes</td>
+                        <td>{mtime_str}</td>
+                    </tr>
+                """
+        
+        html += """
+                </tbody>
+            </table>
+        </body>
+        </html>
+        """
+        
+        return html
+        
+    except Exception as e:
+        return f"Error listing directory: {str(e)}", 500
+
+
 @app.route('/uploads/<path:filename>')
 @app.route('/download/<path:filename>')
 
@@ -660,4 +738,4 @@ def add_version_headers(response):
 
 if __name__ == "__main__":
     # 🚨 脆弱性5: セキュリティヘッダーの欠如
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
