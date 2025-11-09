@@ -29,7 +29,7 @@
 | 3 | **Stored XSS** | A03:2021 | `/guestbook` (POST) | ゲストブックへのスクリプト保存・実行 |
 | 4 | **Path Traversal** | A01:2021 | `/files?file=` | ディレクトリトラバーサルによるファイルアクセス |
 | 5 | **Missing Security Headers** | A05:2021 | 全エンドポイント | X-Frame-Options、CSP、HSTS等の欠如 |
-| 6 | **CSRF** | A01:2021 | `/guestbook` (POST) | CSRFトークン未実装 |
+| 6 | **CSRF** | A01:2021 | `/login` (POST) | CSRFトークン未実装 |
 | 7 | **Command Injection** | A03:2021 | `/tools/ping` | OSコマンドインジェクション |
 | 8 | **Vulnerable Components** | A06:2021 | `/vulnerable-components` | jQuery 2.2.4（4つのCVE） |
 | 9 | **Open Redirect** | A01:2021 | `/open-redirect-demo` | 未検証の外部URLリダイレクト |
@@ -155,13 +155,13 @@ curl "http://localhost:5000/tools/ping?host=\`whoami\`"
 
 ### 6. CSRF (Cross-Site Request Forgery)
 
-CSRFトークンなしでGuestbookにPOST可能：
+CSRFトークンなしでログインフォームにPOST可能：
 
 ```html
 <!-- 攻撃者のサイトに配置 -->
-<form action="http://victim-site/guestbook" method="POST">
-  <input type="hidden" name="name" value="CSRF Attack">
-  <input type="hidden" name="comment" value="This was posted via CSRF">
+<form action="http://victim-site/login" method="POST">
+  <input type="hidden" name="username" value="attacker">
+  <input type="hidden" name="password" value="password123">
 </form>
 <script>document.forms[0].submit();</script>
 ```
@@ -271,7 +271,8 @@ VulnApp/
 │   ├── base.html              # ベーステンプレート（jQuery読み込み）
 │   ├── index.html             # トップページ（脆弱性一覧）
 │   ├── products.html          # 商品検索（SQLi, Reflected XSS）
-│   ├── guestbook.html         # ゲストブック（Stored XSS, CSRF）
+│   ├── guestbook.html         # ゲストブック（Stored XSS）
+│   ├── login.html             # ログイン（CSRF）
 │   ├── file_view.html         # ファイルビューア（Path Traversal）
 │   ├── tools.html             # ツールページ（Command Injection）
 │   ├── vulnerable_components.html  # 脆弱コンポーネント詳細

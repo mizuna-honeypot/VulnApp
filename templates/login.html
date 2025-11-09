@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}ログイン - CSRF デモ{% endblock %}
+
+{% block content %}
+<div class="vuln-demo">
+    <h2>🔐 ログイン (CSRF のデモ)</h2>
+    
+    <div class="warning-box">
+        <h3>⚠️ 脆弱性: CSRF (Cross-Site Request Forgery) (A01:2021)</h3>
+        <p>このログインフォームは意図的にCSRF（クロスサイトリクエストフォージェリ）の脆弱性を含んでいます。</p>
+    </div>
+
+    <div class="demo-section">
+        <h3>ログイン</h3>
+        <form method="POST" action="/login" class="login-form">
+            <div class="form-group">
+                <label for="username">ユーザー名:</label>
+                <input type="text" id="username" name="username" placeholder="ユーザー名を入力" required>
+            </div>
+            <div class="form-group">
+                <label for="password">パスワード:</label>
+                <input type="password" id="password" name="password" placeholder="パスワードを入力" required>
+            </div>
+            <button type="submit" class="btn">ログイン</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h3>💡 CSRF攻撃のシナリオ</h3>
+        <ul class="payload-list">
+            <li>攻撃者が悪意のあるHTMLページを作成</li>
+            <li>被害者がそのページにアクセス</li>
+            <li>隠しフォームが自動送信され、被害者の権限で不正な操作が実行される</li>
+            <li>CSRFトークンがないため、リクエストの正当性を検証できない</li>
+        </ul>
+    </div>
+
+    {% if success %}
+    <div class="result-section success">
+        <h3>✅ ログイン成功</h3>
+        <p>ようこそ、<strong>{{ username }}</strong> さん！</p>
+        <p>このフォームにはCSRF保護がないため、攻撃者が任意のリクエストを送信できます。</p>
+    </div>
+    {% endif %}
+
+    <div class="demo-section">
+        <h3>📖 技術的な説明</h3>
+        <div class="code-block">
+            <h4>脆弱なコード:</h4>
+            <pre>&lt;form method="POST" action="/login"&gt;
+    &lt;!-- CSRFトークンなし --&gt;
+    &lt;input type="text" name="username"&gt;
+    &lt;input type="password" name="password"&gt;
+    &lt;button type="submit"&gt;ログイン&lt;/button&gt;
+&lt;/form&gt;</pre>
+            <p>CSRFトークンがないため、外部サイトから送信されたリクエストを検証できません。</p>
+        </div>
+        <div class="code-block">
+            <h4>安全なコード:</h4>
+            <pre>&lt;form method="POST" action="/login"&gt;
+    &lt;!-- CSRFトークンを追加 --&gt;
+    &lt;input type="hidden" name="csrf_token" value="{% raw %}{{ csrf_token() }}{% endraw %}"&gt;
+    &lt;input type="text" name="username"&gt;
+    &lt;input type="password" name="password"&gt;
+    &lt;button type="submit"&gt;ログイン&lt;/button&gt;
+&lt;/form&gt;</pre>
+            <p>サーバー側でCSRFトークンを検証することで、外部サイトからの不正なリクエストを防ぎます。</p>
+        </div>
+        <p>Flask-WTFなどのライブラリを使用すると、CSRFトークンの生成と検証を簡単に実装できます。</p>
+    </div>
+</div>
+
+<style>
+.vuln-demo {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.demo-section {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.payload-list {
+    list-style: none;
+    padding: 0;
+}
+
+.payload-list li {
+    background-color: #fff;
+    border-left: 4px solid #007bff;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.result-section {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.result-section h3 {
+    color: #155724;
+    margin-top: 0;
+}
+
+.code-block {
+    background-color: #fff;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.code-block pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.code-block code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+</style>
+{% endblock %}

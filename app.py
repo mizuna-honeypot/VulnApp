@@ -449,80 +449,27 @@ def api_info():
         'cwd': os.getcwd(),
         'endpoints': [str(rule) for rule in app.url_map.iter_rules()]
     }
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login_page():
-    """ログインページ (Open Redirect のテスト用)"""
-    return '''
-    <html>
-    <head><meta charset="UTF-8"><title>ログイン</title></head>
-    <body>
-        <h2>ログイン</h2>
-        <form method="POST" action="/do-login">
-            <input type="text" name="username" placeholder="ユーザー名" required><br><br>
-            <input type="password" name="password" placeholder="パスワード" required><br><br>
-            <button type="submit">ログイン</button>
-        </form>
-    </body>
-    </html>
-    '''
-
-
-@app.route('/do-login', methods=['POST'])
-def do_login():
-    """ログイン処理 (Open Redirect のデモ用)"""
-    username = request.form.get('username', '')
-    next_url = request.args.get('next', '/')
+    """ログインページ - CSRF Vulnerable
     
-    # 簡易的な認証（デモ用）
-    if username:
-        # 🚨 脆弱性: next パラメータを検証せずにリダイレクト
-        return redirect(next_url)
-    
-    return 'ログイン失敗', 401
-
-
-# ==========================================
-# Directory Listing Vulnerability
-# ==========================================
-@app.route('/uploads')
-@app.route('/uploads/')
-def list_uploads():
-    """Directory Listing Vulnerable - ディレクトリ一覧の表示
-    
-    脆弱性: アップロードディレクトリの内容を一覧表示
+    GETとPOSTを同じエンドポイントで処理することで、
+    スキャナーがCSRFを検出しやすくする
     """
-    upload_dir = os.path.join(os.getcwd(), 'uploads')
+    success = False
+    username = None
     
-    try:
-        # 🚨 脆弱性: ディレクトリ内のファイル一覧を表示
-        files = os.listdir(upload_dir)
+    # POST: ログイン処理（CSRFトークンなし）
+    if request.method == 'POST':
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
         
-        html = '''
-        <html>
-        <head><meta charset="UTF-8"><title>Directory Listing</title></head>
-        <body>
-            <h2>📁 Directory Listing: /uploads/</h2>
-            <p style="color: red;">⚠️ 脆弱性: ディレクトリの内容が公開されています</p>
-            <ul>
-        '''
-        
-        for file in files:
-            file_path = os.path.join(upload_dir, file)
-            size = os.path.getsize(file_path)
-            html += f'<li><a href="/uploads/{file}">{file}</a> ({size} bytes)</li>'
-        
-        html += '''
-            </ul>
-            <hr>
-            <p><a href="/">ホームに戻る</a></p>
-        </body>
-        </html>
-        '''
-        
-        return html
-        
-    except Exception as e:
-        return f'Error: {str(e)}', 500
+        # 簡易的な認証（デモ用）
+        if username and password:
+            success = True
+    
+    # テンプレートをレンダリング
+    return render_template('login.html', success=success, username=username)
 
 
 @app.route('/uploads/<path:filename>')
