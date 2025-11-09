@@ -1,52 +1,203 @@
 {% extends "base.html" %}
 
-{% block title %}Network Tools - VulnApp{% endblock %}
+{% block title %}Network Tools - Command Injection デモ{% endblock %}
 
 {% block content %}
-<div class="container">
-        <div class="nav"><a href="/">← Back to Home</a></div>
-        <h1>Network Tools</h1>
-        <div class="warning">⚠️ <strong>Vulnerability Warning:</strong> These tools are vulnerable to Command Injection!<br>Example payloads: <code>; ls</code>, <code>| whoami</code>, <code>& cat /etc/passwd</code></div>
-        <div class="tool-section">
-            <h2>🔍 Ping Tool</h2>
-            <form method="POST" action="/tools/ping">
-                <div class="form-group">
-                    <label for="host">Host or IP Address:</label>
-                    <input type="text" id="host" name="host" value="{{ ping_host }}" placeholder="8.8.8.8">
-                    <button type="submit">Ping</button>
-                    <div class="example">Try: <code>127.0.0.1; ls -la</code> or <code>localhost | whoami</code></div>
-                </div>
-            </form>
-            {% if ping_output %}<div class="output">{{ ping_output }}</div>{% endif %}
-        </div>
-        <div class="tool-section">
-            <h2>🌐 DNS Lookup</h2>
-            <form method="POST" action="/tools/nslookup">
-                <div class="form-group">
-                    <label for="domain">Domain Name:</label>
-                    <input type="text" id="domain" name="domain" value="{{ nslookup_domain }}" placeholder="google.com">
-                    <button type="submit">Lookup</button>
-                    <div class="example">Try: <code>google.com; cat /etc/passwd</code> or <code>example.com & id</code></div>
-                </div>
-            </form>
-            {% if nslookup_output %}<div class="output">{{ nslookup_output }}</div>{% endif %}
-        </div>
+<div class="vuln-demo">
+    <h2>🔧 Network Tools (Command Injection のデモ)</h2>
+    
+    <div class="warning-box">
+        <h3>⚠️ 脆弱性: Command Injection (A03:2021)</h3>
+        <p>これらのツールは意図的にコマンドインジェクションの脆弱性を含んでいます。</p>
     </div>
 
+    <div class="demo-section">
+        <h3>💡 試してみるペイロード</h3>
+        <ul class="payload-list">
+            <li><code>; ls -la</code> - コマンド区切り（セミコロン）</li>
+            <li><code>| whoami</code> - パイプでコマンド実行</li>
+            <li><code>& cat /etc/passwd</code> - バックグラウンド実行</li>
+            <li><code>$(id)</code> - コマンド置換</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h3>🔍 Ping Tool</h3>
+        <form method="POST" action="/tools/ping" class="tool-form">
+            <div class="form-group">
+                <label for="host">Host or IP Address:</label>
+                <input type="text" id="host" name="host" value="{{ ping_host }}" placeholder="8.8.8.8">
+            </div>
+            <button type="submit" class="btn">Ping</button>
+            <div class="example">試してみる: <code>127.0.0.1; ls -la</code> または <code>localhost | whoami</code></div>
+        </form>
+        {% if ping_output %}
+        <div class="output-box">
+            <h4>実行結果:</h4>
+            <pre>{{ ping_output }}</pre>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="demo-section">
+        <h3>🌐 DNS Lookup</h3>
+        <form method="POST" action="/tools/nslookup" class="tool-form">
+            <div class="form-group">
+                <label for="domain">Domain Name:</label>
+                <input type="text" id="domain" name="domain" value="{{ nslookup_domain }}" placeholder="google.com">
+            </div>
+            <button type="submit" class="btn">Lookup</button>
+            <div class="example">試してみる: <code>google.com; cat /etc/passwd</code> または <code>example.com & id</code></div>
+        </form>
+        {% if nslookup_output %}
+        <div class="output-box">
+            <h4>実行結果:</h4>
+            <pre>{{ nslookup_output }}</pre>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="demo-section">
+        <h3>📖 技術的な説明</h3>
+        <div class="code-block">
+            <h4>脆弱なコード:</h4>
+            <pre>command = f"ping -c 4 {host}"
+output = subprocess.check_output(command, shell=True)</pre>
+            <p><code>shell=True</code>パラメータを使用すると、シェル経由でコマンドが実行され、
+               特殊文字(<code>;</code>, <code>|</code>, <code>&</code>など)を悪用できます。</p>
+        </div>
+        <div class="code-block">
+            <h4>安全なコード:</h4>
+            <pre>command = ["ping", "-c", "4", host]
+output = subprocess.check_output(command, shell=False)</pre>
+            <p><code>shell=False</code>を使用し、コマンドを配列で指定することで、
+               シェルのメタ文字が処理されず、コマンドインジェクションを防げます。</p>
+        </div>
+    </div>
+</div>
+
 <style>
-body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background-color: #f5f5f5; }
-        .container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        .tool-section { margin-bottom: 40px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 70%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background-color: #28a745; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
-        button:hover { background-color: #218838; }
-        .output { margin-top: 15px; padding: 15px; background-color: #000; color: #0f0; font-family: 'Courier New', monospace; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; max-height: 300px; overflow-y: auto; }
-        .warning { padding: 15px; margin-bottom: 20px; background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; border-radius: 4px; }
-        .nav { margin-bottom: 20px; }
-        .nav a { color: #007bff; text-decoration: none; margin-right: 15px; }
-        .example { font-size: 0.9em; color: #666; margin-top: 5px; }
+.vuln-demo {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.demo-section {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.tool-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.example {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.example code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.payload-list {
+    list-style: none;
+    padding: 0;
+}
+
+.payload-list li {
+    background-color: #fff;
+    border-left: 4px solid #007bff;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: monospace;
+}
+
+.payload-list code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.output-box {
+    margin-top: 20px;
+    background-color: #000;
+    border-radius: 5px;
+    padding: 15px;
+}
+
+.output-box h4 {
+    color: #0f0;
+    margin-top: 0;
+}
+
+.output-box pre {
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0;
+}
+
+.code-block {
+    background-color: #fff;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.code-block pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.code-block code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
 </style>
 {% endblock %}
