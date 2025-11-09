@@ -483,43 +483,9 @@ def list_uploads():
     upload_dir = os.path.join(os.getcwd(), 'uploads')
     
     try:
+        file_list = []
         files = os.listdir(upload_dir)
         files.sort()
-        
-        # HTMLでディレクトリ一覧を表示
-        html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Index of /uploads/</title>
-            <style>
-                body { font-family: monospace; margin: 20px; }
-                h1 { font-size: 18px; }
-                table { border-collapse: collapse; width: 100%; }
-                th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
-                th { background-color: #f2f2f2; }
-                a { color: blue; text-decoration: none; }
-                a:hover { text-decoration: underline; }
-            </style>
-        </head>
-        <body>
-            <h1>Index of /uploads/</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Size</th>
-                        <th>Last Modified</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><a href="/">[Parent Directory]</a></td>
-                        <td>-</td>
-                        <td>-</td>
-                    </tr>
-        """
         
         for file in files:
             file_path = os.path.join(upload_dir, file)
@@ -529,22 +495,13 @@ def list_uploads():
                 from datetime import datetime
                 mtime_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
                 
-                html += f"""
-                    <tr>
-                        <td><a href="/uploads/{file}">{file}</a></td>
-                        <td>{size} bytes</td>
-                        <td>{mtime_str}</td>
-                    </tr>
-                """
+                file_list.append({
+                    'name': file,
+                    'size': size,
+                    'mtime': mtime_str
+                })
         
-        html += """
-                </tbody>
-            </table>
-        </body>
-        </html>
-        """
-        
-        return html
+        return render_template('uploads_list.html', files=file_list)
         
     except Exception as e:
         return f"Error listing directory: {str(e)}", 500
