@@ -49,6 +49,9 @@
                 <div class="message-body">
                     <!-- 🚨 意図的な脆弱性: safeフィルタでXSS可能 -->
                     {{ entry.comment | safe }}
+                    
+                    <!-- 属性値コンテキストを追加: Tenable WASのプロトコルベースペイロード検出用 -->
+                    <a href="{{ entry.comment | safe }}" class="hidden-link">リンク</a>
                 </div>
             </div>
             {% endfor %}
@@ -211,6 +214,17 @@
 .message-body {
     color: #555;
     line-height: 1.6;
+    position: relative;
+}
+
+/* 属性値コンテキストのリンクを非表示に */
+.hidden-link {
+    display: none;
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .code-block {
